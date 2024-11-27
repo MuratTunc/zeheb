@@ -1,0 +1,29 @@
+version: '3'
+
+services:
+
+  main-service:
+    build:
+      context: ./../main-service
+      dockerfile: ./../main-service/main-service.dockerfile
+    restart: always
+    ports:
+      - "${MAIN_SERVICE_PORT}:${MAIN_SERVICE_PORT}"
+    deploy:
+      mode: replicated
+      replicas: 1
+    env_file:
+      - ../.env  # Reference the .env file from the root directory
+
+  logger-service:
+    build:
+      context: ./../logger-service
+      dockerfile: ./../logger-service/logger-service.dockerfile
+    restart: always
+    ports:
+      - "${LOGGER_SERVICE_PORT}:${LOGGER_SERVICE_PORT}"
+    deploy:
+      mode: replicated
+      replicas: 1
+    env_file:
+      - ../.env  # Reference the .env file from the root directory

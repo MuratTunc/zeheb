@@ -1,0 +1,26 @@
+# Ignore .env file for Go environment variables
+.env
+
+# Node.js (for web app)
+node_modules/
+npm-debug.log
+
+# Go (for back-end)
+*.exe
+*.exe~
+*.dll
+*.so
+*.dylib
+/vendor/
+
+# Mobile app
+/build/
+.idea/
+*.iml
+
+# IDEs
+.vscode/
+.idea/
+
+# Logs
+*.log
