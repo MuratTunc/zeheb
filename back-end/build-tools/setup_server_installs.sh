@@ -22,6 +22,15 @@ else
   echo "netstat is already installed."
 fi
 
+# Install npm if not already installed
+if ! command -v npm &>/dev/null; then
+  echo "npm not found, installing Node.js and npm..."
+  apt update
+  apt install -y nodejs npm
+else
+  echo "npm is already installed."
+fi
+
 # Update system packages
 echo "Updating package list..."
 apt update && apt upgrade -y

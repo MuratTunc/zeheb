@@ -1,23 +1,36 @@
 package main
 
 import (
+	"io"
+	"log"
 	"net/http"
 )
 
-type JSONPayload struct {
-	Name string `json:"name"`
-	Data string `json:"data"`
-}
+// Log handles incoming requests, modifies the payload, and sends a response
+func (app *Config) Log(w http.ResponseWriter, r *http.Request) {
+	// Read the request body from the main service
+	body, err := io.ReadAll(r.Body)
+	if err != nil {
+		http.Error(w, "Failed to read request body", http.StatusInternalServerError)
+		log.Printf("ERROR: Failed to read request body: %v", err)
+		return
+	}
+	defer r.Body.Close()
 
-func (app *Config) WriteLog(w http.ResponseWriter, r *http.Request) {
-	// read json into var
-	var requestPayload JSONPayload
-	_ = app.readJSON(w, r, &requestPayload)
+	// Append "Hello" to the received text
+	updatedText := string(body) + " Hello"
 
-	resp := jsonResponse{
+	// Prepare the response payload
+	payload := jsonResponse{
 		Error:   false,
-		Message: "logged",
+		Message: "Message from logger service",
+		Data:    updatedText,
 	}
 
-	app.writeJSON(w, http.StatusAccepted, resp)
+	// Write the JSON response
+	err = app.writeJSON(w, http.StatusAccepted, payload)
+	if err != nil {
+		log.Printf("ERROR: Failed to write JSON response: %v", err)
+		http.Error(w, "Failed to write response", http.StatusInternalServerError)
+	}
 }

@@ -5,9 +5,9 @@ import (
 	"log"
 	"net/http"
 	"os"
-)
 
-const serviceName = "LOGGER-SERVICE"
+	"github.com/joho/godotenv"
+)
 
 type Config struct{}
 
@@ -15,22 +15,25 @@ func main() {
 
 	app := Config{}
 
-	loggerServicePort := os.Getenv("LOGGER_SERVICE_PORT")
-	if loggerServicePort == "" {
-		loggerServicePort = "8001" // Default value if not set
+	err := godotenv.Load()
+	if err != nil {
+		log.Fatal("Error loading .env file")
 	}
 
-	// start web server
-	// go app.serve()
-	log.Printf("%s is running on port: %s", serviceName, loggerServicePort)
+	ServicePort := os.Getenv("LOGGER_SERVICE_PORT")
+	ServiceName := os.Getenv("LOGGER_SERVICE_NAME")
+	if ServicePort == "" {
+		ServicePort = "8001" // Default value if not set
+	}
+
+	log.Printf("%s is running on port: %s", ServiceName, ServicePort)
 	srv := &http.Server{
-		Addr:    fmt.Sprintf(":%s", loggerServicePort),
+		Addr:    fmt.Sprintf(":%s", ServicePort),
 		Handler: app.routes(),
 	}
 
-	err := srv.ListenAndServe()
+	err = srv.ListenAndServe()
 	if err != nil {
 		log.Panic()
 	}
-
 }

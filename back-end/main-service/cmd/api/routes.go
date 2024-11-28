@@ -11,7 +11,7 @@ import (
 func (app *Config) routes() http.Handler {
 	mux := chi.NewRouter()
 
-	// CORS configuration to allow your domain and local development environment
+	// CORS configuration to allow domain and local development environment
 	mux.Use(cors.Handler(cors.Options{
 		AllowedOrigins: []string{
 			"https://thyflightmenuassistant.com",     // Allow requests from your production domain
@@ -29,8 +29,7 @@ func (app *Config) routes() http.Handler {
 	mux.Use(middleware.Heartbeat("/ping"))
 
 	// Define application-specific routes
-
-	mux.Post("/getorder", app.GetBuyerRequest)
+	mux.Post("/getorder", app.GetBuyerRequestHandler)
 
 	return mux
 }

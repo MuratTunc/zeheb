@@ -1,0 +1,125 @@
+name: Deploy Backend and Frontend to Server
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+        continue-on-error: false  # Ensure this step fails the job if it fails
+        id: checkout
+
+      - name: Set up SSH
+        uses: webfactory/ssh-agent@v0.5.3
+        with:
+          ssh-private-key: ${{ secrets.SSH_KEY }}
+        continue-on-error: false  # Ensure this step fails the job if it fails
+        id: setup_ssh
+
+      - name: Add host to known hosts
+        run: |
+          echo "Adding host to known hosts..."
+          mkdir -p ~/.ssh
+          ssh-keyscan -H ${{ secrets.SERVER_IP }} >> ~/.ssh/known_hosts || { echo "Failed to add host to known hosts"; exit 1; }
+
+      # Step 1: Clone Repository to Server
+      - name: Clone Repository to Server
+        run: |
+          SERVER_IP="${{ secrets.SERVER_IP }}"
+          SERVER_USER_NAME="${{ secrets.SERVER_USER_NAME }}"
+          SERVER_PROJECT_DIR="${{ secrets.SERVER_PROJECT_DIR }}"
+          REPO="${{ secrets.REPO }}"
+
+          echo "Cloning repository to the server..."
+          ssh -T -o StrictHostKeyChecking=no $SERVER_USER_NAME@$SERVER_IP << EOF
+            set -e  # Stop script on error
+
+            # Check if the project directory exists, if not, create it and clone the repository
+            if [ ! -d "$SERVER_PROJECT_DIR" ]; then
+              echo "Creating project directory..."
+              mkdir -p "$SERVER_PROJECT_DIR"
+              echo "Directory does not exist. Cloning repository..."
+              git clone $REPO $SERVER_PROJECT_DIR
+            else
+              echo "Directory exists. Pulling latest changes..."
+              cd $SERVER_PROJECT_DIR
+              git reset --hard
+              git pull origin main
+            fi
+          EOF
+
+      # Step 2: Deploy Back-End Services
+      - name: Deploy Back-End Services
+        if: github.ref == 'refs/heads/main' && contains(github.event.head_commit.message, 'Merge branch back-end-dev')
+        run: |
+          SERVER_IP="${{ secrets.SERVER_IP }}"
+          SERVER_USER_NAME="${{ secrets.SERVER_USER_NAME }}"
+          SERVER_PROJECT_DIR="${{ secrets.SERVER_PROJECT_DIR }}"
+          MAIN_SERVICE_PORT="0.0.0.0:8000->8000/tcp"
+          LOGGER_SERVICE_PORT="0.0.0.0:8001->8001/tcp"
+          MAIN_SERVICE_NAME="build-tools-back-end-service-1"
+          LOGGER_SERVICE_NAME="build-tools-logger-service-1"
+
+          echo "Deploying back-end services..."
+          ssh -T -o StrictHostKeyChecking=no $SERVER_USER_NAME@$SERVER_IP << EOF
+            set -e  # Stop script on error
+
+            # Navigate to the build-tools directory
+            cd $SERVER_PROJECT_DIR/build-tools
+            echo "Running 'make down' and 'make up_build'..."
+            sudo make down || { echo "'make down' failed!"; exit 1; }
+            sudo make up_build || { echo "'make up_build' failed!"; exit 1; }
+
+            # Check main service container
+            echo "Checking the main service container..."
+            MAIN_SERVICE_STATUS=\$(sudo docker ps | grep "$MAIN_SERVICE_NAME" | grep "$MAIN_SERVICE_PORT")
+            if [ -z "\$MAIN_SERVICE_STATUS" ]; then
+              echo "Error: Main service container is not running on port $MAIN_SERVICE_PORT!"
+              exit 1
+            else
+              echo "Main service container is running successfully on port $MAIN_SERVICE_PORT!"
+            fi
+
+            # Check logger service container
+            echo "Checking the logger service container..."
+            LOGGER_SERVICE_STATUS=\$(sudo docker ps | grep "$LOGGER_SERVICE_NAME" | grep "$LOGGER_SERVICE_PORT")
+            if [ -z "\$LOGGER_SERVICE_STATUS" ]; then
+              echo "Error: Logger service container is not running on port $LOGGER_SERVICE_PORT!"
+              exit 1
+            else
+              echo "Logger service container is running successfully on port $LOGGER_SERVICE_PORT!"
+            fi
+          EOF
+
+      # Step 3: Deploy Front-End
+      - name: Deploy Front-End
+        if: github.ref == 'refs/heads/main' && contains(github.event.head_commit.message, 'Merge branch web-app-dev')
+        run: |
+          SERVER_IP="${{ secrets.SERVER_IP }}"
+          SERVER_USER_NAME="${{ secrets.SERVER_USER_NAME }}"
+          SERVER_PROJECT_DIR="${{ secrets.SERVER_PROJECT_DIR }}"
+
+          echo "Deploying front-end..."
+          ssh -T -o StrictHostKeyChecking=no $SERVER_USER_NAME@$SERVER_IP << EOF
+            set -e  # Stop script on error
+
+            # Navigate to the web-app directory
+            cd $SERVER_PROJECT_DIR/web-app
+            echo "Installing front-end dependencies..."
+            npm install || { echo "npm install failed!"; exit 1; }
+
+            echo "Building front-end..."
+            npm run build || { echo "npm build failed!"; exit 1; }
+
+            echo "Copying front-end build files to Nginx web root..."
+            sudo rm -rf /var/www/html/*  # Clean existing files
+            sudo cp -r $SERVER_PROJECT_DIR/web-app/build/* /var/www/html/
+
+            echo "Front-end deployed successfully!"
+          EOF
