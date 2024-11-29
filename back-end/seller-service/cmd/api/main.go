@@ -1,3 +1,4 @@
+// Seller Service: Manages responses from the Seller app.
 package main
 
 import (

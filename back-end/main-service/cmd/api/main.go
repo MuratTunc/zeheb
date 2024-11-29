@@ -1,3 +1,4 @@
+// Main Service: Handles requests from the Buyer app.
 package main
 
 import (
@@ -9,7 +10,7 @@ import (
 	"github.com/joho/godotenv"
 )
 
-type Config struct{}
+//type Config struct{}
 
 func main() {
 

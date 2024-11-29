@@ -12,24 +12,33 @@ func (app *Config) routes() http.Handler {
 	mux := chi.NewRouter()
 
 	// CORS configuration to allow domain and local development environment
+	allowedOrigins := []string{
+		"https://zeheb.com",     // Allow requests from your production domain
+		"https://www.zeheb.com", // Allow www version of domain
+		"http://localhost:3000", // Allow requests from localhost (your local dev environment)
+	}
+
 	mux.Use(cors.Handler(cors.Options{
-		AllowedOrigins: []string{
-			"https://thyflightmenuassistant.com",     // Allow requests from your production domain
-			"https://www.thyflightmenuassistant.com", // Allow www version of your domain
-			"http://localhost:3000",                  // Allow requests from localhost (your local dev environment)
-		},
-		AllowedMethods:   []string{"GET", "POST", "PUT", "DELETE", "OPTIONS"},                 // Methods allowed
-		AllowedHeaders:   []string{"Accept", "Authorization", "Content-Type", "X-CSRF-Token"}, // Allowed headers
+		AllowedOrigins:   allowedOrigins,
+		AllowedMethods:   []string{"GET", "POST", "PUT", "DELETE", "OPTIONS"},
+		AllowedHeaders:   []string{"Accept", "Authorization", "Content-Type", "X-CSRF-Token"},
 		ExposedHeaders:   []string{"Link"},
 		AllowCredentials: true,
 		MaxAge:           300, // Cache preflight response for 5 minutes
 	}))
 
-	// Middleware for heartbeat (health check)
-	mux.Use(middleware.Heartbeat("/ping"))
+	// Middleware
+	mux.Use(middleware.Heartbeat("/ping")) // Health check endpoint
+	mux.Use(middleware.Recoverer)          // Recover from panics gracefully
+	mux.Use(middleware.Logger)             // Log all requests
 
-	// Define application-specific routes
-	mux.Post("/getorder", app.GetBuyerRequestHandler)
+	// API Routes
+	mux.Route("/api/v1", func(r chi.Router) {
+		// Existing route for buyer's price request
+		r.Post("/buyer/giveprice", app.GetBuyerRequestHandler)
 
+		// New route for seller's price response
+		r.Post("/seller/price", app.GetSellerPriceHandler) // Example new handler
+	})
 	return mux
 }
