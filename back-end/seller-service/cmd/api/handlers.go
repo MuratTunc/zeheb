@@ -6,6 +6,8 @@ import (
 	"net/http"
 )
 
+type Config struct{}
+
 // ReceiveBuyerRequest handles the POST request when the main service sends a buyer request to the seller service.
 func (app *Config) ReceiveBuyerRequest(w http.ResponseWriter, r *http.Request) {
 	var request BuyerRequest

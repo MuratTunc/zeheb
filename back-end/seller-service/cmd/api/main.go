@@ -6,25 +6,17 @@ import (
 	"log"
 	"net/http"
 	"os"
-
-	"github.com/joho/godotenv"
 )
-
-type Config struct{}
 
 func main() {
 
 	app := Config{}
 
-	err := godotenv.Load()
-	if err != nil {
-		log.Fatal("Error loading .env file")
-	}
+	ServicePort := os.Getenv("SELLER_SERVICE_PORT")
+	ServiceName := os.Getenv("SELLER_SERVICE_NAME")
 
-	ServicePort := os.Getenv("LOGGER_SERVICE_PORT")
-	ServiceName := os.Getenv("LOGGER_SERVICE_NAME")
-	if ServicePort == "" {
-		ServicePort = "8001" // Default value if not set
+	if ServicePort == "" || ServiceName == "" {
+		log.Fatal("Error: Service environment variables are not set")
 	}
 
 	log.Printf("%s is running on port: %s", ServiceName, ServicePort)
@@ -33,7 +25,7 @@ func main() {
 		Handler: app.routes(),
 	}
 
-	err = srv.ListenAndServe()
+	err := srv.ListenAndServe()
 	if err != nil {
 		log.Panic()
 	}

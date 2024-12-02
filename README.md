@@ -88,7 +88,7 @@ CREATE TABLE seller_prices (
     request_id INTEGER REFERENCES buyer_requests(request_id),
     price DECIMAL NOT NULL,
     timestamp TIMESTAMP NOT NULL
-
+)
 
 
 ## Seller Service

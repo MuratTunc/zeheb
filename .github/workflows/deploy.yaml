@@ -28,7 +28,6 @@ jobs:
           mkdir -p ~/.ssh
           ssh-keyscan -H ${{ secrets.SERVER_IP }} >> ~/.ssh/known_hosts || { echo "Failed to add host to known hosts"; exit 1; }
 
-      # Step 1: Clone Repository to Server
       - name: Clone Repository to Server
         run: |
           SERVER_IP="${{ secrets.SERVER_IP }}"
@@ -54,50 +53,32 @@ jobs:
             fi
           EOF
 
-      # Step 2: Deploy Back-End Services
+      - name: Upload .env file to the server
+        run: |
+            SERVER_USER_NAME="${{ secrets.SERVER_USER_NAME }}"
+            SERVER_IP="${{ secrets.SERVER_IP }}"
+            SERVER_PROJECT_DIR="${{ secrets.SERVER_PROJECT_DIR }}"
+            echo "Uploading .env file to the server..."
+            scp back-end/build-tools/.env $SERVER_USER_NAME@$SERVER_IP:$SERVER_PROJECT_DIR/back-end/build-tools/    
+
       - name: Deploy Back-End Services
         if: github.ref == 'refs/heads/main' && contains(github.event.head_commit.message, 'Merge branch back-end-dev')
         run: |
           SERVER_IP="${{ secrets.SERVER_IP }}"
           SERVER_USER_NAME="${{ secrets.SERVER_USER_NAME }}"
           SERVER_PROJECT_DIR="${{ secrets.SERVER_PROJECT_DIR }}"
-          MAIN_SERVICE_PORT="0.0.0.0:8000->8000/tcp"
-          LOGGER_SERVICE_PORT="0.0.0.0:8001->8001/tcp"
-          MAIN_SERVICE_NAME="build-tools-back-end-service-1"
-          LOGGER_SERVICE_NAME="build-tools-logger-service-1"
 
           echo "Deploying back-end services..."
           ssh -T -o StrictHostKeyChecking=no $SERVER_USER_NAME@$SERVER_IP << EOF
             set -e  # Stop script on error
 
             # Navigate to the build-tools directory
-            cd $SERVER_PROJECT_DIR/build-tools
+            cd $SERVER_PROJECT_DIR/back-end/build-tools
             echo "Running 'make down' and 'make up_build'..."
             sudo make down || { echo "'make down' failed!"; exit 1; }
             sudo make up_build || { echo "'make up_build' failed!"; exit 1; }
-
-            # Check main service container
-            echo "Checking the main service container..."
-            MAIN_SERVICE_STATUS=\$(sudo docker ps | grep "$MAIN_SERVICE_NAME" | grep "$MAIN_SERVICE_PORT")
-            if [ -z "\$MAIN_SERVICE_STATUS" ]; then
-              echo "Error: Main service container is not running on port $MAIN_SERVICE_PORT!"
-              exit 1
-            else
-              echo "Main service container is running successfully on port $MAIN_SERVICE_PORT!"
-            fi
-
-            # Check logger service container
-            echo "Checking the logger service container..."
-            LOGGER_SERVICE_STATUS=\$(sudo docker ps | grep "$LOGGER_SERVICE_NAME" | grep "$LOGGER_SERVICE_PORT")
-            if [ -z "\$LOGGER_SERVICE_STATUS" ]; then
-              echo "Error: Logger service container is not running on port $LOGGER_SERVICE_PORT!"
-              exit 1
-            else
-              echo "Logger service container is running successfully on port $LOGGER_SERVICE_PORT!"
-            fi
           EOF
 
-      # Step 3: Deploy Front-End
       - name: Deploy Front-End
         if: github.ref == 'refs/heads/main' && contains(github.event.head_commit.message, 'Merge branch web-app-dev')
         run: |

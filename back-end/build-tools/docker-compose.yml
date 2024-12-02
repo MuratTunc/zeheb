@@ -1,29 +1,38 @@
-version: '3'
+version: '3.5'
 
 services:
-
-  main-service:
+  buyer-service:
     build:
-      context: ./../main-service
-      dockerfile: ./../main-service/main-service.dockerfile
+      context: ./../buyer-service
+      dockerfile: ./../buyer-service/buyer-service.dockerfile
     restart: always
+    container_name: BUYER-SERVICE
+    image: buyer-service-img
     ports:
-      - "${MAIN_SERVICE_PORT}:${MAIN_SERVICE_PORT}"
+      - "${BUYER_SERVICE_PORT}:${BUYER_SERVICE_PORT}"  # Maps the buyer-service port from .env
+    environment:
+      - BUYER_SERVICE_PORT=${BUYER_SERVICE_PORT}
+      - BUYER_SERVICE_NAME=${BUYER_SERVICE_NAME}
+    env_file:
+      - .env   # Ensure the environment variables are read from this file
     deploy:
       mode: replicated
       replicas: 1
-    env_file:
-      - ../.env  # Reference the .env file from the root directory
 
-  logger-service:
+  seller-service:
     build:
-      context: ./../logger-service
-      dockerfile: ./../logger-service/logger-service.dockerfile
+      context: ./../seller-service
+      dockerfile: ./../seller-service/seller-service.dockerfile
     restart: always
+    image: seller-service-img
+    container_name: SELLER-SERVICE
     ports:
-      - "${LOGGER_SERVICE_PORT}:${LOGGER_SERVICE_PORT}"
+      - "${SELLER_SERVICE_PORT}:${SELLER_SERVICE_PORT}"  # Maps the seller-service port from .env
+    environment:
+      - SELLER_SERVICE_PORT=${SELLER_SERVICE_PORT}
+      - SELLER_SERVICE_NAME=${SELLER_SERVICE_NAME}  
+    env_file:
+      - .env   # Ensure the environment variables are read from this file
     deploy:
       mode: replicated
       replicas: 1
-    env_file:
-      - ../.env  # Reference the .env file from the root directory
