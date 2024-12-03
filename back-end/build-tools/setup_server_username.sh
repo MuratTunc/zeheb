@@ -1,5 +1,26 @@
 #!/bin/bash
 
+# Steps the Script Performs:
+
+#     Checks for Root Privileges: Ensures the script is executed by the root user, as many operations (e.g., creating a user, modifying sudoers) require administrative rights.
+
+#    Creates a New User (mutu):
+#         Adds the user with a default password (mutu), which is then printed as a reminder to change for security reasons.
+#         Configures the home directory and sets the default shell to /bin/bash.
+# 
+#     Configures SSH Access:
+#        Copies the root user's SSH configuration (~/.ssh) to the new user's .ssh directory.
+#         Sets appropriate permissions and ownership for the .ssh directory and its contents.
+# 
+#     Grants sudo Privileges:
+#         Adds the user to the sudo group.
+#         Configures passwordless sudo for the user by appending a line to the /etc/sudoers file using visudo.
+# 
+#     Restarts the SSH Service: Restarts the SSH service to apply any potential configuration changes.
+# 
+#     Switches to the New User: Logs in as the new user to confirm the setup.
+    
+
 USERNAME="mutu"
 
 # Check if script is run as root
