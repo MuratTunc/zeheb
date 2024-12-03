@@ -6,7 +6,7 @@ services:
       context: ./../buyer-service
       dockerfile: ./../buyer-service/buyer-service.dockerfile
     restart: always
-    container_name: BUYER-SERVICE
+    container_name: ${BUYER_SERVICE_NAME}
     image: buyer-service-img
     ports:
       - "${BUYER_SERVICE_PORT}:${BUYER_SERVICE_PORT}"  # Maps the buyer-service port from .env
@@ -25,7 +25,7 @@ services:
       dockerfile: ./../seller-service/seller-service.dockerfile
     restart: always
     image: seller-service-img
-    container_name: SELLER-SERVICE
+    container_name: ${SELLER_SERVICE_NAME}
     ports:
       - "${SELLER_SERVICE_PORT}:${SELLER_SERVICE_PORT}"  # Maps the seller-service port from .env
     environment:
