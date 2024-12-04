@@ -126,14 +126,17 @@ else
   exit 1
 fi
 
-# Add Go to PATH
+# Add Go to PATH if not already added
 echo "Setting up Go environment..."
 if ! grep -q "/usr/local/go/bin" ~/.bashrc; then
   echo "export PATH=\$PATH:/usr/local/go/bin" >> ~/.bashrc
+  print_success "Go path added to ~/.bashrc."
+else
+  print_success "Go path already exists in ~/.bashrc."
 fi
 
-# Apply the Go path immediately in this session
-export PATH=$PATH:/usr/local/go/bin
+# Reload environment variables to apply changes immediately
+source ~/.bashrc
 
 # Verify Go installation
 echo "Go version:"
@@ -143,6 +146,7 @@ else
   print_error "Go installation verification failed."
   exit 1
 fi
+
 
 # Display running Docker containers
 echo "Checking running Docker containers..."
