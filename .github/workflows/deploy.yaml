@@ -48,13 +48,13 @@ jobs:
               # Ensure GitHub is in known hosts
               mkdir -p ~/.ssh
               ssh-keyscan github.com >> ~/.ssh/known_hosts
-              
+
             # Check if the project directory exists, if not, create it and clone the repository
             if [ ! -d "$SERVER_PROJECT_DIR" ]; then
               echo "Creating project directory..."
               mkdir -p "$SERVER_PROJECT_DIR"
               echo "Directory does not exist. Cloning repository..."
-              git clone $REPO $SERVER_PROJECT_DIR
+              git clone git@github.com:MuratTunc/zeheb.git /home/mutu/zeheb
             else
               echo "Directory exists. Pulling latest changes..."
               cd $SERVER_PROJECT_DIR
