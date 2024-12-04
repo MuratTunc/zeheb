@@ -165,4 +165,4 @@ else
   print_error "Nginx is not actively listening on ports 80 or 443."
 fi
 
-print_success "Setup completed successfully!"
+print_success "<--Setup completed successfully-->"
