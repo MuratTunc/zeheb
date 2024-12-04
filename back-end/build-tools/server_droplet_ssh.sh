@@ -28,7 +28,6 @@ echo "Adding the public key to /home/$USERNAME/.ssh/authorized_keys..."
 echo "$PUBLIC_KEY" >> /home/$USERNAME/.ssh/authorized_keys
 chmod 600 /home/$USERNAME/.ssh/authorized_keys
 chown $USERNAME:$USERNAME /home/$USERNAME/.ssh/authorized_keys
-
 echo "SSH key added successfully for user '$USERNAME'."
 
 # Step 1: Check if the private key exists. If not, generate a new one.
