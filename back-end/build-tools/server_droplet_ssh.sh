@@ -1,5 +1,5 @@
 #!/bin/bash
-
+# usage:sudo ./setup_mutu_ssh.sh "<your-public-key>"
 USERNAME="mutu"
 PUBLIC_KEY="$1" # Pass the public key as an argument to the script
 
