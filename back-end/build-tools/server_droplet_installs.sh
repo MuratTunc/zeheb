@@ -135,8 +135,8 @@ else
   print_success "Go path already exists in ~/.bashrc."
 fi
 
-# Reload environment variables to apply changes immediately
-source ~/.bashrc
+# Export the updated PATH immediately for the current shell session
+export PATH=$PATH:/usr/local/go/bin
 
 # Verify Go installation
 echo "Go version:"
@@ -146,7 +146,6 @@ else
   print_error "Go installation verification failed."
   exit 1
 fi
-
 
 # Display running Docker containers
 echo "Checking running Docker containers..."
