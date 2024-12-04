@@ -66,5 +66,4 @@ if [[ $? -ne 0 ]]; then
   echo "Error: Failed to authenticate with GitHub."
   exit 1
 fi
-
 echo "SSH setup and authentication with GitHub successful!"
