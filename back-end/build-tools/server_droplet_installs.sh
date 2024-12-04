@@ -123,22 +123,25 @@ if curl -fsSL "$GO_VERSION_URL" -o go.tar.gz &&
   print_success "Go installed successfully."
 else
   print_error "Failed to install Go."
+  exit 1
 fi
 
 # Add Go to PATH
 echo "Setting up Go environment..."
-if echo "export PATH=\$PATH:/usr/local/go/bin" >> ~/.bashrc && source ~/.bashrc; then
-  print_success "Go environment set up successfully."
-else
-  print_error "Failed to set up Go environment."
+if ! grep -q "/usr/local/go/bin" ~/.bashrc; then
+  echo "export PATH=\$PATH:/usr/local/go/bin" >> ~/.bashrc
 fi
 
-# Check the installed Go version
+# Apply the Go path immediately in this session
+export PATH=$PATH:/usr/local/go/bin
+
+# Verify Go installation
 echo "Go version:"
 if go version; then
   print_success "Go is working as expected."
 else
   print_error "Go installation verification failed."
+  exit 1
 fi
 
 # Display running Docker containers
