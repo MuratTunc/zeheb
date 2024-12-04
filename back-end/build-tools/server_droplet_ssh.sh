@@ -31,8 +31,6 @@ chown $USERNAME:$USERNAME /home/$USERNAME/.ssh/authorized_keys
 
 echo "SSH key added successfully for user '$USERNAME'."
 
-
-
 # Step 1: Check if the private key exists. If not, generate a new one.
 if [ ! -f "$PRIVATE_KEY_PATH" ]; then
   echo "Private key not found. Generating new SSH key pair..."
