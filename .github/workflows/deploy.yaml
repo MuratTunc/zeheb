@@ -10,56 +10,56 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
+      # Checkout the repository
       - name: Checkout code
         uses: actions/checkout@v3
-        continue-on-error: false  # Ensure this step fails the job if it fails
-        id: checkout
+        continue-on-error: false
 
-      - name: Set up SSH key
+      # Set up SSH
+      - name: Set up SSH
+        uses: webfactory/ssh-agent@v0.5.3
+        with:
+          ssh-private-key: ${{ secrets.SSH_KEY }}
+        continue-on-error: false
+
+      # Add the server to known hosts
+      - name: Add server to known hosts
         run: |
-          echo "${{ secrets.SSH_KEY }}" > ~/.ssh/id_rsa
-          chmod 600 ~/.ssh/id_rsa
-        env:
-          SSH_PRIVATE_KEY: ${{ secrets.SSH_KEY }}
+          echo "Adding server to known hosts..."
+          mkdir -p ~/.ssh
+          ssh-keyscan -H ${{ secrets.SERVER_IP }} >> ~/.ssh/known_hosts || { echo "Failed to add host to known hosts"; exit 1; }
 
-      - name: Add GitHub to known hosts
-        run: ssh-keyscan github.com >> ~/.ssh/known_hosts
-
-      - name: Start SSH agent
-        run: |
-          eval $(ssh-agent -s)
-          echo "${{ secrets.SSH_KEY }}" | ssh-add -
-      
-      - name: Clone Repository to Server
+      # Deploy the repository to the server
+      - name: Deploy Backend and Frontend to Server
         run: |
           SERVER_IP="${{ secrets.SERVER_IP }}"
           SERVER_USER_NAME="${{ secrets.SERVER_USER_NAME }}"
           SERVER_PROJECT_DIR="${{ secrets.SERVER_PROJECT_DIR }}"
           REPO="${{ secrets.REPO }}"
 
-          echo "Cloning repository to the server..."
-          ssh -T -o StrictHostKeyChecking=no $SERVER_USER_NAME@$SERVER_IP << EOF
-            set -e  # Stop script on error
+          echo "Deploying repository to the server..."
+          ssh ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_IP }} << 'EOF'
+            set -e  # Stop the script on any error
             
-              # Start SSH agent if not already running
-              eval \$(ssh-agent -s)
+            # Start the SSH agent
+            eval \$(ssh-agent -s)
 
-              # Add private key to SSH agent
-              ssh-add ~/.ssh/id_rsa
+            # Add private key to the SSH agent
+            ssh-add ~/.ssh/id_rsa
 
-              # Ensure GitHub is in known hosts
-              mkdir -p ~/.ssh
-              ssh-keyscan github.com >> ~/.ssh/known_hosts
+            # Add GitHub to known hosts
+            mkdir -p ~/.ssh
+            ssh-keyscan -H github.com >> ~/.ssh/known_hosts
 
-            # Check if the project directory exists, if not, create it and clone the repository
+            # Check if the project directory exists; if not, create it and clone the repository
             if [ ! -d "$SERVER_PROJECT_DIR" ]; then
-              echo "Creating project directory..."
+              echo "Creating project directory: $SERVER_PROJECT_DIR"
               mkdir -p "$SERVER_PROJECT_DIR"
-              echo "Directory does not exist. Cloning repository..."
-              git clone git@github.com:MuratTunc/zeheb.git /home/mutu/zeheb
+              echo "Cloning repository into $SERVER_PROJECT_DIR..."
+              git clone "$REPO" "$SERVER_PROJECT_DIR"
             else
-              echo "Directory exists. Pulling latest changes..."
-              cd $SERVER_PROJECT_DIR
+              echo "Directory exists. Pulling the latest changes..."
+              cd "$SERVER_PROJECT_DIR"
               git reset --hard
               git pull origin main
             fi
