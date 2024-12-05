@@ -9,6 +9,12 @@ jobs:
   deploy:
     runs-on: ubuntu-latest
 
+    env:
+      SERVER_IP: "147.182.236.74"
+      SERVER_USER_NAME: "mutu"
+      SERVER_PROJECT_DIR: "/home/mutu"
+      REPO: "git@github.com:MuratTunc/zeheb.git"
+
     steps:
       # Checkout the repository
       - name: Checkout code
@@ -27,73 +33,43 @@ jobs:
         run: |
           echo "Adding server to known hosts..."
           mkdir -p ~/.ssh
-          ssh-keyscan -H ${{ secrets.SERVER_IP }} >> ~/.ssh/known_hosts || { echo "Failed to add host to known hosts"; exit 1; }
+          ssh-keyscan -H ${{ env.SERVER_IP }} >> ~/.ssh/known_hosts || { echo "Failed to add host to known hosts"; exit 1; }
 
       # Deploy the repository to the server
       - name: Clone Repository to Server
         run: |
-          SERVER_IP="${{ secrets.SERVER_IP }}"
-          SERVER_USER_NAME="${{ secrets.SERVER_USER_NAME }}"
-          SERVER_PROJECT_DIR="${{ secrets.SERVER_PROJECT_DIR }}"
-          REPO="${{ secrets.REPO }}"
-    
           echo "Deploying repository to the server..."
-    
-          # Ensure the environment variables are not empty
-          if [[ -z "$SERVER_IP" || -z "$SERVER_USER_NAME" || -z "$SERVER_PROJECT_DIR" ]]; then
-            echo "Error: Missing required environment variables. Please check SERVER_IP, SERVER_USER_NAME, and SERVER_PROJECT_DIR."
-            exit 1
-          fi
-    
-          ssh -vvv -T -o StrictHostKeyChecking=no $SERVER_USER_NAME@$SERVER_IP << EOF
+          ssh -vvv -T -o StrictHostKeyChecking=no ${{ env.SERVER_USER_NAME }}@${{ env.SERVER_IP }} << EOF
             set -e  # Stop script on error
-    
-            # Start SSH agent if not already running
-            eval \$(ssh-agent -s)
-    
-            # Add private key to SSH agent
-            ssh-add ~/.ssh/id_rsa
-    
-            # Ensure GitHub is in known hosts
-            mkdir -p ~/.ssh
-            ssh-keyscan github.com >> ~/.ssh/known_hosts
-    
+
             # Check if the project directory exists, if not, create it and clone the repository
-            if [ ! -d "$SERVER_PROJECT_DIR" ]; then
+            if [ ! -d "${{ env.SERVER_PROJECT_DIR }}" ]; then
               echo "Creating project directory..."
-              mkdir -p "$SERVER_PROJECT_DIR"
+              mkdir -p "${{ env.SERVER_PROJECT_DIR }}"
               echo "Directory does not exist. Cloning repository..."
-              git clone git@github.com:MuratTunc/zeheb.git "$SERVER_PROJECT_DIR"
+              git clone "${{ env.REPO }}" "${{ env.SERVER_PROJECT_DIR }}"
             else
               echo "Directory exists. Pulling latest changes..."
-              cd "$SERVER_PROJECT_DIR"
+              cd "${{ env.SERVER_PROJECT_DIR }}"
               git reset --hard
               git pull origin main
             fi
           EOF
-    
 
       - name: Upload .env file to the server
         run: |
-            SERVER_USER_NAME="${{ secrets.SERVER_USER_NAME }}"
-            SERVER_IP="${{ secrets.SERVER_IP }}"
-            SERVER_PROJECT_DIR="${{ secrets.SERVER_PROJECT_DIR }}"
             echo "Uploading .env file to the server..."
-            scp back-end/build-tools/.env $SERVER_USER_NAME@$SERVER_IP:$SERVER_PROJECT_DIR/back-end/build-tools/    
+            scp back-end/build-tools/.env ${{ env.SERVER_USER_NAME }}@${{ env.SERVER_IP }}:${{ env.SERVER_PROJECT_DIR }}/back-end/build-tools/
 
       - name: Deploy Back-End Services
         if: github.ref == 'refs/heads/main' && contains(github.event.head_commit.message, 'Merge branch back-end-dev')
         run: |
-          SERVER_IP="${{ secrets.SERVER_IP }}"
-          SERVER_USER_NAME="${{ secrets.SERVER_USER_NAME }}"
-          SERVER_PROJECT_DIR="${{ secrets.SERVER_PROJECT_DIR }}"
-
           echo "Deploying back-end services..."
-          ssh -T -o StrictHostKeyChecking=no $SERVER_USER_NAME@$SERVER_IP << EOF
+          ssh -T -o StrictHostKeyChecking=no ${{ env.SERVER_USER_NAME }}@${{ env.SERVER_IP }} << EOF
             set -e  # Stop script on error
 
             # Navigate to the build-tools directory
-            cd $SERVER_PROJECT_DIR/back-end/build-tools
+            cd "${{ env.SERVER_PROJECT_DIR }}/back-end/build-tools"
             echo "Running 'make down' and 'make up_build'..."
             sudo make down || { echo "'make down' failed!"; exit 1; }
             sudo make up_build || { echo "'make up_build' failed!"; exit 1; }
@@ -102,16 +78,12 @@ jobs:
       - name: Deploy Front-End
         if: github.ref == 'refs/heads/main' && contains(github.event.head_commit.message, 'Merge branch web-app-dev')
         run: |
-          SERVER_IP="${{ secrets.SERVER_IP }}"
-          SERVER_USER_NAME="${{ secrets.SERVER_USER_NAME }}"
-          SERVER_PROJECT_DIR="${{ secrets.SERVER_PROJECT_DIR }}"
-
           echo "Deploying front-end..."
-          ssh -T -o StrictHostKeyChecking=no $SERVER_USER_NAME@$SERVER_IP << EOF
+          ssh -T -o StrictHostKeyChecking=no ${{ env.SERVER_USER_NAME }}@${{ env.SERVER_IP }} << EOF
             set -e  # Stop script on error
 
             # Navigate to the web-app directory
-            cd $SERVER_PROJECT_DIR/web-app
+            cd "${{ env.SERVER_PROJECT_DIR }}/web-app"
             echo "Installing front-end dependencies..."
             npm install || { echo "npm install failed!"; exit 1; }
 
@@ -120,7 +92,7 @@ jobs:
 
             echo "Copying front-end build files to Nginx web root..."
             sudo rm -rf /var/www/html/*  # Clean existing files
-            sudo cp -r $SERVER_PROJECT_DIR/web-app/build/* /var/www/html/
+            sudo cp -r "${{ env.SERVER_PROJECT_DIR }}/web-app/build/*" /var/www/html/
 
             echo "Front-end deployed successfully!"
           EOF
