@@ -40,20 +40,29 @@ jobs:
         run: |
           echo "Deploying repository to the server..."
           ssh -v -T -o StrictHostKeyChecking=no ${{ env.SERVER_USER_NAME }}@${{ env.SERVER_IP }} << EOF
-            set -e  # Stop script on error
+          set -e  # Stop script on error
 
-            # Check if the project directory exists, if not, create it and clone the repository
+          # Check if the project directory exists
             if [ ! -d "${{ env.SERVER_PROJECT_DIR }}" ]; then
-              echo "Directory does not exist Creating project directory..."
+              echo "Directory does not exist. Creating project directory and cloning repository..."
               mkdir -p "${{ env.SERVER_PROJECT_DIR }}"
-              echo "Cloning repository..."
               git clone "${{ env.REPO }}" "${{ env.SERVER_PROJECT_DIR }}"
             else
-              echo "Directory exists. Pulling latest changes..."
-              cd "${{ env.SERVER_PROJECT_DIR }}"
-              git clone "${{ env.REPO }}" "${{ env.SERVER_PROJECT_DIR }}"
+              # Check if the directory is a valid Git repository
+              if [ ! -d "${{ env.SERVER_PROJECT_DIR }}/.git" ]; then
+                echo "Directory exists but is not a valid Git repository. Re-cloning repository..."
+                rm -rf "${{ env.SERVER_PROJECT_DIR }}"
+                mkdir -p "${{ env.SERVER_PROJECT_DIR }}"
+                git clone "${{ env.REPO }}" "${{ env.SERVER_PROJECT_DIR }}"
+              else
+                echo "Directory exists and is a valid Git repository. Pulling latest changes..."
+                cd "${{ env.SERVER_PROJECT_DIR }}"
+                git reset --hard
+                git pull origin main
+              fi
             fi
           EOF
+
 
       - name: Upload .env file to the server
         run: |
