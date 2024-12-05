@@ -14,6 +14,7 @@ jobs:
       SERVER_USER_NAME: "mutu"
       SERVER_PROJECT_DIR: "/home/mutu/zeheb"
       REPO: "git@github.com:MuratTunc/zeheb.git"
+      ENV_FILE_PATH:  "/home/mutu/projects/zeheb/back-end/build-tools/.env"
 
     steps:
       # Checkout the repository
@@ -67,7 +68,7 @@ jobs:
       - name: Upload .env file to the server
         run: |
             echo "Uploading .env file to the server..."
-            scp back-end/build-tools/.env ${{ env.SERVER_USER_NAME }}@${{ env.SERVER_IP }}:${{ env.SERVER_PROJECT_DIR }}/back-end/build-tools/
+            scp ${{ env.ENV_FILE_PATH }} ${{ env.SERVER_USER_NAME }}@${{ env.SERVER_IP }}:${{ env.SERVER_PROJECT_DIR }}/back-end/build-tools/
 
       - name: Deploy Back-End Services
         if: github.ref == 'refs/heads/main' && contains(github.event.head_commit.message, 'Merge branch back-end-dev')
