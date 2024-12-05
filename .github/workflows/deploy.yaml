@@ -12,7 +12,7 @@ jobs:
     env:
       SERVER_IP: "147.182.236.74"
       SERVER_USER_NAME: "mutu"
-      SERVER_PROJECT_DIR: "/home/mutu"
+      SERVER_PROJECT_DIR: "/home/mutu/zeheb"
       REPO: "git@github.com:MuratTunc/zeheb.git"
 
     steps:
@@ -39,14 +39,14 @@ jobs:
       - name: Clone Repository to Server
         run: |
           echo "Deploying repository to the server..."
-          ssh -vvv -T -o StrictHostKeyChecking=no ${{ env.SERVER_USER_NAME }}@${{ env.SERVER_IP }} << EOF
+          ssh -v -T -o StrictHostKeyChecking=no ${{ env.SERVER_USER_NAME }}@${{ env.SERVER_IP }} << EOF
             set -e  # Stop script on error
 
             # Check if the project directory exists, if not, create it and clone the repository
             if [ ! -d "${{ env.SERVER_PROJECT_DIR }}" ]; then
-              echo "Creating project directory..."
+              echo "Directory does not exist Creating project directory..."
               mkdir -p "${{ env.SERVER_PROJECT_DIR }}"
-              echo "Directory does not exist. Cloning repository..."
+              echo "Cloning repository..."
               git clone "${{ env.REPO }}" "${{ env.SERVER_PROJECT_DIR }}"
             else
               echo "Directory exists. Pulling latest changes..."
