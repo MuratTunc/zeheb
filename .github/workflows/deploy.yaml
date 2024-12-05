@@ -51,8 +51,7 @@ jobs:
             else
               echo "Directory exists. Pulling latest changes..."
               cd "${{ env.SERVER_PROJECT_DIR }}"
-              git reset --hard
-              git pull origin main
+              git clone "${{ env.REPO }}" "${{ env.SERVER_PROJECT_DIR }}"
             fi
           EOF
 
