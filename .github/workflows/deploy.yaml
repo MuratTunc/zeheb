@@ -30,40 +30,48 @@ jobs:
           ssh-keyscan -H ${{ secrets.SERVER_IP }} >> ~/.ssh/known_hosts || { echo "Failed to add host to known hosts"; exit 1; }
 
       # Deploy the repository to the server
-      - name: Deploy Backend and Frontend to Server
+      - name: Clone Repository to Server
         run: |
           SERVER_IP="${{ secrets.SERVER_IP }}"
           SERVER_USER_NAME="${{ secrets.SERVER_USER_NAME }}"
           SERVER_PROJECT_DIR="${{ secrets.SERVER_PROJECT_DIR }}"
           REPO="${{ secrets.REPO }}"
-
+    
           echo "Deploying repository to the server..."
-          ssh ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_IP }} << 'EOF'
-            set -e  # Stop the script on any error
-            
-            # Start the SSH agent
+    
+          # Ensure the environment variables are not empty
+          if [[ -z "$SERVER_IP" || -z "$SERVER_USER_NAME" || -z "$SERVER_PROJECT_DIR" ]]; then
+            echo "Error: Missing required environment variables. Please check SERVER_IP, SERVER_USER_NAME, and SERVER_PROJECT_DIR."
+            exit 1
+          fi
+    
+          ssh -T -o StrictHostKeyChecking=no $SERVER_USER_NAME@$SERVER_IP << EOF
+            set -e  # Stop script on error
+    
+            # Start SSH agent if not already running
             eval \$(ssh-agent -s)
-
-            # Add private key to the SSH agent
+    
+            # Add private key to SSH agent
             ssh-add ~/.ssh/id_rsa
-
-            # Add GitHub to known hosts
+    
+            # Ensure GitHub is in known hosts
             mkdir -p ~/.ssh
-            ssh-keyscan -H github.com >> ~/.ssh/known_hosts
-
-            # Check if the project directory exists; if not, create it and clone the repository
+            ssh-keyscan github.com >> ~/.ssh/known_hosts
+    
+            # Check if the project directory exists, if not, create it and clone the repository
             if [ ! -d "$SERVER_PROJECT_DIR" ]; then
-              echo "Creating project directory: $SERVER_PROJECT_DIR"
+              echo "Creating project directory..."
               mkdir -p "$SERVER_PROJECT_DIR"
-              echo "Cloning repository into $SERVER_PROJECT_DIR..."
-              git clone "$REPO" "$SERVER_PROJECT_DIR"
+              echo "Directory does not exist. Cloning repository..."
+              git clone git@github.com:MuratTunc/zeheb.git "$SERVER_PROJECT_DIR"
             else
-              echo "Directory exists. Pulling the latest changes..."
+              echo "Directory exists. Pulling latest changes..."
               cd "$SERVER_PROJECT_DIR"
               git reset --hard
               git pull origin main
             fi
           EOF
+    
 
       - name: Upload .env file to the server
         run: |
