@@ -45,7 +45,7 @@ jobs:
             exit 1
           fi
     
-          ssh -T -o StrictHostKeyChecking=no $SERVER_USER_NAME@$SERVER_IP << EOF
+          ssh -vvv -T -o StrictHostKeyChecking=no $SERVER_USER_NAME@$SERVER_IP << EOF
             set -e  # Stop script on error
     
             # Start SSH agent if not already running
