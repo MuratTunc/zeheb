@@ -1,39 +1,126 @@
 #!/bin/bash
 
-# Define variables for server and script paths
-SERVER_IP="64.23.150.141"            # Replace with your server IP
-SERVER_USER="root"                    # Assuming root user
-LOCAL_SCRIPT_PATH="./server_droplet_newuser.sh"  # Local path to the script
-REMOTE_SCRIPT_PATH="/root/server_droplet_newuser.sh"  # Remote path for the script
+# Variables
+SERVER_IP="24.199.103.191"            # Replace with your server IP
+SERVER_USER="root"                   # Assuming root user
+NEW_USER="mutu7"                      # New user being set up
+PRIVATE_KEY_PATH="$HOME/.ssh/id_rsa"  # Path to private SSH key on local machine
+REPO_GIT_SSH_LINK="git@github.com:MuratTunc/zeheb.git"  # GitHub repository SSH link
+SERVER_REPO_DIR="/home/$NEW_USER/zeheb"  # Dynamically set the repository directory based on NEW_USER
 
-# 1. Copy the server_droplet_newuser.sh script to the server as the root user
-echo "Copying the script to the server droplet..."
-scp "$LOCAL_SCRIPT_PATH" "$SERVER_USER@$SERVER_IP:$REMOTE_SCRIPT_PATH"
+# Color definitions
+RED="\033[0;31m"
+GREEN="\033[0;32m"
+RESET="\033[0m"
 
-# Check if the script copied successfully
-if [ $? -ne 0 ]; then
-  echo "Failed to copy the script to the server. Exiting..."
-  exit 1
-fi
+# Function to display success messages
+success() {
+  echo -e "${GREEN}$1${RESET}"
+}
 
-# 2. Give execution permissions to the script on the server
-echo "Setting execution permissions for the script on the server..."
-ssh "$SERVER_USER@$SERVER_IP" "chmod +x $REMOTE_SCRIPT_PATH"
+# Function to display error messages
+error() {
+  echo -e "${RED}$1${RESET}"
+}
 
-# Check if permissions were set correctly
-if [ $? -ne 0 ]; then
-  echo "Failed to set execution permissions on the server. Exiting..."
-  exit 1
-fi
+# Function to set up the new user
+setup_new_user() {
+  success "Setting up the new user on the server..."
+  ssh "$SERVER_USER@$SERVER_IP" << EOF
+    set -e  # Exit immediately if any command fails
 
-# 3. Run the script on the server as the root user
-echo "Running the script on the server droplet..."
-ssh "$SERVER_USER@$SERVER_IP" "bash $REMOTE_SCRIPT_PATH"
+    # Check if the user exists
+    if id "$NEW_USER" &>/dev/null; then
+      echo "User '$NEW_USER' already exists. Skipping user creation and password setting."
+    else
+      echo "Creating user '$NEW_USER'..."
+      useradd -m -s /bin/bash "$NEW_USER"
+      echo "$NEW_USER:$NEW_USER" | chpasswd
+      echo "Password set to '$NEW_USER'. Please change it after setup."
+    fi
 
-# Check if the script ran successfully
-if [ $? -eq 0 ]; then
-  echo "New user setup script executed successfully on the server!"
-else
-  echo "Failed to execute the script on the server."
-  exit 1
-fi
+    echo "Setting up .ssh directory for '$NEW_USER'..."
+    mkdir -p /home/$NEW_USER/.ssh
+    chmod 0700 /home/$NEW_USER/.ssh/
+    cp -Rfv /root/.ssh /home/$NEW_USER/
+    chown -Rfv $NEW_USER:$NEW_USER /home/$NEW_USER/.ssh
+
+    echo "Adding '$NEW_USER' to the sudo group..."
+    gpasswd -a $NEW_USER sudo
+
+    echo "Configuring passwordless sudo for '$NEW_USER'..."
+    echo "$NEW_USER ALL=(ALL) NOPASSWD: ALL" | (EDITOR="tee -a" visudo)
+
+    echo "Restarting SSH service..."
+    service ssh restart
+
+    echo "Setting default shell for '$NEW_USER'..."
+    usermod -s /bin/bash $NEW_USER
+
+    echo "User setup completed for '$NEW_USER'..."
+EOF
+
+  if [ $? -eq 0 ]; then
+    success "New user setup completed successfully!"
+  else
+    error "Failed to set up the new user on the server."
+    exit 1
+  fi
+}
+
+# Function to configure the private SSH key for the new user
+configure_private_ssh_key() {
+  success "Copying the private SSH key to the server for user '$NEW_USER'..."
+  scp "$PRIVATE_KEY_PATH" "$NEW_USER@$SERVER_IP:/home/$NEW_USER/.ssh/id_rsa"
+  if [ $? -eq 0 ]; then
+    success "Private SSH key copied successfully!"
+  else
+    error "Failed to copy the private SSH key to the server."
+    exit 1
+  fi
+
+  ssh "$NEW_USER@$SERVER_IP" << EOF
+    chmod 600 /home/$NEW_USER/.ssh/id_rsa
+    chown $NEW_USER:$NEW_USER /home/$NEW_USER/.ssh/id_rsa
+    ssh-keyscan github.com >> /home/$NEW_USER/.ssh/known_hosts
+EOF
+
+  if [ $? -eq 0 ]; then
+    success "Private SSH key permissions set and GitHub added to known_hosts!"
+  else
+    error "Failed to configure the private SSH key for the new user."
+    exit 1
+  fi
+}
+
+# Function to clone the repository on the server
+clone_repository_on_server() {
+  success "Cloning the GitHub repository on the server droplet..."
+  ssh "$NEW_USER@$SERVER_IP" << EOF
+    set -e
+    ssh-keyscan github.com >> ~/.ssh/known_hosts
+    mkdir -p "$SERVER_REPO_DIR"
+    cd "$SERVER_REPO_DIR"
+    if [ -d ".git" ]; then
+      echo "Repository already exists. Pulling latest changes..."
+      git pull
+    else
+      echo "Cloning the repository into $SERVER_REPO_DIR..."
+      git clone "$REPO_GIT_SSH_LINK" .
+    fi
+EOF
+
+  if [ $? -eq 0 ]; then
+    success "Repository cloned or updated successfully on the server."
+  else
+    error "Failed to clone or update the repository on the server."
+    exit 1
+  fi
+}
+
+# Main Execution
+success "Starting server droplet setup process..."
+setup_new_user
+configure_private_ssh_key
+clone_repository_on_server
+success "All tasks completed successfully!"
