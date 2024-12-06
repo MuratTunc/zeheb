@@ -68,6 +68,3 @@ echo "Setting default shell for '$USERNAME'..."
 usermod -s /bin/bash $USERNAME
 
 echo "Setup completed for user '$USERNAME'. Switching to the new user session..."
-
-# Switch to the new user
-su - $USERNAME

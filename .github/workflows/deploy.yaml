@@ -65,11 +65,7 @@ jobs:
           EOF
 
 
-      - name: Upload .env file to the server
-        run: |
-            echo "Uploading .env file to the server..."
-            scp ${{ env.ENV_FILE_PATH }} ${{ env.SERVER_USER_NAME }}@${{ env.SERVER_IP }}:/home/mutu/zeheb/back-end/build-tools
-
+      
       - name: Deploy Back-End Services
         if: github.ref == 'refs/heads/main' && contains(github.event.head_commit.message, 'Merge branch back-end-dev')
         run: |
@@ -80,8 +76,8 @@ jobs:
             # Navigate to the build-tools directory
             cd "${{ env.SERVER_PROJECT_DIR }}/back-end/build-tools"
             echo "Running 'make down' and 'make up_build'..."
-            sudo make down || { echo "'make down' failed!"; exit 1; }
-            sudo make up_build || { echo "'make up_build' failed!"; exit 1; }
+            # sudo make down || { echo "'make down' failed!"; exit 1; }
+            # sudo make up_build || { echo "'make up_build' failed!"; exit 1; }
           EOF
 
       - name: Deploy Front-End
