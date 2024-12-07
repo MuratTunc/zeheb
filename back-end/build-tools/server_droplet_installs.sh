@@ -92,16 +92,17 @@ else
   print_success "Docker is already installed."
 fi
 
-# Check and install Docker Compose plugin
-if ! docker compose version &>/dev/null; then
-  echo "Installing Docker Compose plugin..."
-  if apt install -y docker-compose-plugin; then
-    print_success "Docker Compose plugin installed successfully."
+# Install Docker Compose stand-alone binary
+if ! command -v docker-compose &>/dev/null; then
+  echo "Installing Docker Compose stand-alone binary..."
+  if curl -L "https://github.com/docker/compose/releases/download/$(curl -s https://api.github.com/repos/docker/compose/releases/latest | jq -r .tag_name)/docker-compose-$(uname -s)-$(uname -m)" -o /usr/local/bin/docker-compose &&
+     chmod +x /usr/local/bin/docker-compose; then
+    print_success "Docker Compose installed successfully."
   else
-    print_error "Failed to install Docker Compose plugin."
+    print_error "Failed to install Docker Compose."
   fi
 else
-  print_success "Docker Compose plugin is already installed."
+  print_success "Docker Compose is already installed."
 fi
 
 # Check and install Certbot
