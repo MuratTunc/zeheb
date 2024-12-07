@@ -1,9 +1,18 @@
 #!/bin/bash
 
-# Variables
-SERVER_IP="143.198.72.85"            # Replace with your server IP
+# Load .env file
+LOCAL_ENV_FILE="$(dirname "$0")/.env"  # Path to the .env file (same directory as this script)
+if [ -f "$LOCAL_ENV_FILE" ]; then
+  source "$LOCAL_ENV_FILE"
+else
+  echo "Error: .env file not found at $LOCAL_ENV_FILE"
+  exit 1
+fi
+
+# Variables from .env file
+SERVER_IP="${SERVER_IP}"  # Loaded from .env
+NEW_USER="${NEW_USER}"    # Loaded from .env
 SERVER_USER="root"                    # Assuming root user
-NEW_USER="mutu9"                       # New user being set up
 PRIVATE_KEY_PATH="$HOME/.ssh/id_rsa"  # Path to private SSH key on local machine
 REPO_GIT_SSH_LINK="git@github.com:MuratTunc/zeheb.git"  # GitHub repository SSH link
 SERVER_REPO_DIR="/home/$NEW_USER/zeheb"  # Dynamically set the repository directory based on NEW_USER
