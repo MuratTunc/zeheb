@@ -10,11 +10,10 @@ jobs:
     runs-on: ubuntu-latest
 
     env:
-      SERVER_IP: "147.182.236.74"
-      SERVER_USER_NAME: "mutu"
+      SERVER_IP: ${{ secrets.SERVER_IP }}
+      SERVER_USER_NAME: ${{ secrets.SERVER_USER_NAME }}
       SERVER_PROJECT_DIR: "/home/mutu/zeheb"
       REPO: "git@github.com:MuratTunc/zeheb.git"
-      ENV_FILE_PATH:  "/home/mutu/projects/zeheb/back-end/build-tools/.env"
 
     steps:
       # Checkout the repository
@@ -76,8 +75,8 @@ jobs:
             # Navigate to the build-tools directory
             cd "${{ env.SERVER_PROJECT_DIR }}/back-end/build-tools"
             echo "Running 'make down' and 'make up_build'..."
-            # sudo make down || { echo "'make down' failed!"; exit 1; }
-            # sudo make up_build || { echo "'make up_build' failed!"; exit 1; }
+            sudo make down || { echo "'make down' failed!"; exit 1; }
+            sudo make up_build || { echo "'make up_build' failed!"; exit 1; }
           EOF
 
       - name: Deploy Front-End
