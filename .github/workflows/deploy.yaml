@@ -14,6 +14,8 @@ jobs:
       SERVER_USER_NAME: ${{ secrets.SERVER_USER_NAME }}
       SERVER_PROJECT_DIR: "/home/${{ secrets.SERVER_USER_NAME }}/zeheb"
       REPO: "git@github.com:MuratTunc/zeheb.git"
+      RUN_BACKEND_DEPLOY: true  # Set to true or false to toggle back-end deployment
+      RUN_FRONTEND_DEPLOY: false  # Set to true or false to toggle front-end deployment
 
     steps:
       # Checkout the repository
@@ -63,10 +65,9 @@ jobs:
             fi
           EOF
 
-
-      
+      # Deploy Back-End Services
       - name: Deploy Back-End Services
-        if: github.ref == 'refs/heads/main' && contains(github.event.head_commit.message, 'Merge branch back-end-dev')
+        if: env.RUN_BACKEND_DEPLOY == 'true'
         run: |
           echo "Deploying back-end services..."
           ssh -T -o StrictHostKeyChecking=no ${{ env.SERVER_USER_NAME }}@${{ env.SERVER_IP }} << EOF
@@ -79,8 +80,9 @@ jobs:
             sudo make up_build || { echo "'make up_build' failed!"; exit 1; }
           EOF
 
+      # Deploy Front-End
       - name: Deploy Front-End
-        if: github.ref == 'refs/heads/main' && contains(github.event.head_commit.message, 'Merge branch web-app-dev')
+        if: env.RUN_FRONTEND_DEPLOY == 'false'
         run: |
           echo "Deploying front-end..."
           ssh -T -o StrictHostKeyChecking=no ${{ env.SERVER_USER_NAME }}@${{ env.SERVER_IP }} << EOF
