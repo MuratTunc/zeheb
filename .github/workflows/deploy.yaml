@@ -12,7 +12,7 @@ jobs:
     env:
       SERVER_IP: ${{ secrets.SERVER_IP }}
       SERVER_USER_NAME: ${{ secrets.SERVER_USER_NAME }}
-      SERVER_PROJECT_DIR: "/home/mutu/zeheb"
+      SERVER_PROJECT_DIR: "/home/${{ secrets.SERVER_USER_NAME }}/zeheb"
       REPO: "git@github.com:MuratTunc/zeheb.git"
 
     steps:
