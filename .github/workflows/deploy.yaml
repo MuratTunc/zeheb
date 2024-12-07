@@ -41,7 +41,7 @@ jobs:
       - name: Clone Repository to Server
         run: |
           echo "Deploying repository to the server..."
-          ssh -v -T -o StrictHostKeyChecking=no ${{ env.SERVER_USER_NAME }}@${{ env.SERVER_IP }} << EOF
+          ssh -T -o StrictHostKeyChecking=no ${{ env.SERVER_USER_NAME }}@${{ env.SERVER_IP }} << EOF
           set -e  # Stop script on error
 
           # Check if the project directory exists
@@ -82,7 +82,7 @@ jobs:
 
       # Deploy Front-End
       - name: Deploy Front-End
-        if: env.RUN_FRONTEND_DEPLOY == 'false'
+        if: env.RUN_FRONTEND_DEPLOY == 'true'
         run: |
           echo "Deploying front-end..."
           ssh -T -o StrictHostKeyChecking=no ${{ env.SERVER_USER_NAME }}@${{ env.SERVER_IP }} << EOF
