@@ -1,12 +1,14 @@
 #!/bin/bash
 
 # Variables
-SERVER_IP="144.126.210.228"            # Replace with your server IP
-SERVER_USER="root"                   # Assuming root user
-NEW_USER="mutu"                      # New user being set up
+SERVER_IP="143.198.72.85"            # Replace with your server IP
+SERVER_USER="root"                    # Assuming root user
+NEW_USER="mutu6"                       # New user being set up
 PRIVATE_KEY_PATH="$HOME/.ssh/id_rsa"  # Path to private SSH key on local machine
 REPO_GIT_SSH_LINK="git@github.com:MuratTunc/zeheb.git"  # GitHub repository SSH link
 SERVER_REPO_DIR="/home/$NEW_USER/zeheb"  # Dynamically set the repository directory based on NEW_USER
+SERVER_BULID_TOOLS_DIR="/home/$NEW_USER/zeheb/back-end/build-tools"  # Directory for the install script
+LOCAL_ENV_FILE="$(dirname "$0")/.env"  # Path to the .env file (same directory as this script)
 
 # Color definitions
 RED="\033[0;31m"
@@ -25,7 +27,7 @@ error() {
 
 # Function to set up the new user
 setup_new_user() {
-  success "Setting up the new user on the server..."
+  success "Setting up the new user:'$NEW_USER' on the server..."
   ssh "$SERVER_USER@$SERVER_IP" << EOF
     set -e  # Exit immediately if any command fails
 
@@ -94,7 +96,7 @@ EOF
 }
 
 # Function to clone the repository on the server
-clone_repository_on_server() {
+clone_repository() {
   success "Cloning the GitHub repository on the server droplet..."
   ssh "$NEW_USER@$SERVER_IP" << EOF
     set -e
@@ -118,9 +120,61 @@ EOF
   fi
 }
 
+# Function to copy .env file to the server
+transfer_envfile() {
+  success "Copying the .env file to the server..."
+  scp "$LOCAL_ENV_FILE" "$NEW_USER@$SERVER_IP:$SERVER_BULID_TOOLS_DIR/.env"
+  if [ $? -eq 0 ]; then
+    success ".env file copied successfully to $SERVER_BULID_TOOLS_DIR."
+  else
+    error "Failed to copy the .env file to the server."
+    exit 1
+  fi
+}
+
+# Function to run the server installation script
+install() {
+  success "Running server_droplet_installs.sh..."
+  ssh "$NEW_USER@$SERVER_IP" << EOF
+    set -e
+    cd "$SERVER_BULID_TOOLS_DIR"
+    sudo ./server_droplet_installs.sh
+EOF
+
+  if [ $? -eq 0 ]; then
+    success "Server installation script executed successfully!"
+  else
+    error "Failed to execute the server installation script."
+    exit 1
+  fi
+}
+
+# Function to run "make" commands for back-end services
+make_back_end_services() {
+  success "Running 'make' commands for back-end services..."
+  ssh "$NEW_USER@$SERVER_IP" << EOF
+    set -e
+    cd "$SERVER_BULID_TOOLS_DIR"
+    echo "Stopping existing services with 'make down'..."
+    sudo make down
+    echo "Building and starting services with 'make up_build'..."
+    sudo make up_build
+EOF
+
+  if [ $? -eq 0 ]; then
+    success "Back-end services built and started successfully!"
+  else
+    error "Failed to build and start back-end services."
+    exit 1
+  fi
+}
+
 # Main Execution
 success "Starting server droplet setup process..."
 setup_new_user
 configure_private_ssh_key
-clone_repository_on_server
+clone_repository
+transfer_envfile
+install
+make_back_end_services
 success "All tasks completed successfully!"

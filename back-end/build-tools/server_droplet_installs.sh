@@ -83,13 +83,25 @@ if ! docker --version &>/dev/null; then
      curl -fsSL https://download.docker.com/linux/ubuntu/gpg | gpg --dearmor -o /etc/apt/keyrings/docker.gpg &&
      echo "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.gpg] https://download.docker.com/linux/ubuntu $(lsb_release -cs) stable" | tee /etc/apt/sources.list.d/docker.list > /dev/null &&
      apt update &&
-     apt install -y docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin; then
+     apt install -y docker-ce docker-ce-cli containerd.io; then
     print_success "Docker installed successfully."
   else
     print_error "Failed to install Docker."
   fi
 else
   print_success "Docker is already installed."
+fi
+
+# Check and install Docker Compose plugin
+if ! docker compose version &>/dev/null; then
+  echo "Installing Docker Compose plugin..."
+  if apt install -y docker-compose-plugin; then
+    print_success "Docker Compose plugin installed successfully."
+  else
+    print_error "Failed to install Docker Compose plugin."
+  fi
+else
+  print_success "Docker Compose plugin is already installed."
 fi
 
 # Check and install Certbot
