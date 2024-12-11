@@ -12,9 +12,9 @@ fi
 # Variables from .env file
 SERVER_IP="${SERVER_IP}"  # Loaded from .env
 NEW_USER="${NEW_USER}"    # Loaded from .env
+REPO_GIT_SSH_LINK="${REPO_GIT_SSH_LINK}"  # Loaded from .env GitHub repository SSH link
 SERVER_USER="root"                    # Assuming root user
 PRIVATE_KEY_PATH="$HOME/.ssh/id_rsa"  # Path to private SSH key on local machine
-REPO_GIT_SSH_LINK="git@github.com:MuratTunc/zeheb.git"  # GitHub repository SSH link
 SERVER_REPO_DIR="/home/$NEW_USER/zeheb"  # Dynamically set the repository directory based on NEW_USER
 SERVER_BULID_TOOLS_DIR="/home/$NEW_USER/zeheb/back-end/build-tools"  # Directory for the install script
 LOCAL_ENV_FILE="$(dirname "$0")/.env"  # Path to the .env file (same directory as this script)

@@ -10,7 +10,7 @@ ENV_FILE := .env
 ##Clean up the built binaries.
 
 ## up_build: stops docker-compose (if running), builds all projects, checks ports, and starts docker-compose
-up_build: down clean build_buyer_service build_seller_service
+up_build: down clean build_buyer_service build_seller_service build_authentication_service
 	@echo "Checking if service ports are available..."
 	$(MAKE) check_ports
 	@echo "Building (when required) and starting docker images with environment variables..."
@@ -63,6 +63,14 @@ build_seller_service:
 	@set -a; . ./$(ENV_FILE); set +a; \
 		echo "GOFULLPATH is $$GOFULLPATH"; \
 		cd ../seller-service && env CGO_ENABLED=0 GOOS=linux GOARCH=amd64 $$GOFULLPATH build -o $$SELLER_SERVICE_BINARY ./cmd/api
+	@echo "Done!"
+
+## build_authentication_service: builds the seller-service binary as a linux executable
+build_authentication_service:
+	@echo "Building authentication-service binary..."
+	@set -a; . ./$(ENV_FILE); set +a; \
+		echo "GOFULLPATH is $$GOFULLPATH"; \
+		cd ../authentication-service && env CGO_ENABLED=0 GOOS=linux GOARCH=amd64 $$GOFULLPATH build -o $$AUTHENTICATION_SERVICE_BINARY ./cmd/api
 	@echo "Done!"
 
 ## logs: shows logs from all services
