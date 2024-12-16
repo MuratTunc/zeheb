@@ -3,37 +3,33 @@ package main
 import (
 	"authentication-service/data"
 	"database/sql"
-	"flag"
 	"fmt"
 	"log"
 	"net/http"
 	"os"
+	"time"
 )
 
 type Config struct {
-	DSN    string
-	Domain string
 	DB     *sql.DB
 	Models data.Models
 }
 
+var counts int64
+
 func main() {
-	// set application config
-	var app Config
 
-	// read from command line
-	flag.StringVar(&app.DSN, "dsn", "host=localhost port=5432 user=postgres password=postgres dbname=movies sslmode=disable timezone=UTC connect_timeout=5", "Postgres connection string")
-	flag.Parse()
-
-	// connect to the database
-	conn, err := app.connectToDB()
-	if err != nil {
-		log.Fatal(err)
+	// connect to DB
+	conn := connectToDB()
+	if conn == nil {
+		log.Panic("Can't connect to Postgres!")
 	}
-	app.DB = conn
-	defer app.DB.Close()
 
-	app.Domain = "example.com"
+	// set up config
+	var app = Config{
+		DB:     conn,
+		Models: data.New(conn),
+	}
 
 	ServicePort := os.Getenv("AUTHENTICATION_SERVICE_PORT")
 	ServiceName := os.Getenv("AUTHENTICATION_SERVICE_NAME")
@@ -48,8 +44,46 @@ func main() {
 		Handler: app.routes(),
 	}
 
-	err = srv.ListenAndServe()
+	err := srv.ListenAndServe()
 	if err != nil {
 		log.Panic()
+	}
+}
+
+func openDB(dsn string) (*sql.DB, error) {
+	db, err := sql.Open("pgx", dsn)
+	if err != nil {
+		return nil, err
+	}
+
+	err = db.Ping()
+	if err != nil {
+		return nil, err
+	}
+
+	return db, nil
+}
+
+func connectToDB() *sql.DB {
+	dsn := os.Getenv("DSN")
+
+	for {
+		connection, err := openDB(dsn)
+		if err != nil {
+			log.Println("Postgres not yet ready ...")
+			counts++
+		} else {
+			log.Println("Connected to Postgres!")
+			return connection
+		}
+
+		if counts > 10 {
+			log.Println(err)
+			return nil
+		}
+
+		log.Println("Backing off for two seconds....")
+		time.Sleep(2 * time.Second)
+		continue
 	}
 }

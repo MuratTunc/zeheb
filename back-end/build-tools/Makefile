@@ -28,7 +28,8 @@ check_ports:
 	@set -a; . ./$(ENV_FILE); set +a; \
 		echo "Buyer Service Binary: $$BUYER_SERVICE_BINARY"; \
 		echo "Seller Service Binary: $$SELLER_SERVICE_BINARY"; \
-		if lsof -i :$$BUYER_SERVICE_PORT || lsof -i :$$SELLER_SERVICE_PORT; then \
+		echo "Authentication Service Binary: $$AUTHENTICATION_SERVICE_BINARY"; \
+		if lsof -i :$$BUYER_SERVICE_PORT || lsof -i :$$SELLER_SERVICE_PORT; || lsof -i :$$AUTHENTICATION_SERVICE_PORT; then \
 			echo "Error: One or more ports are already in use."; \
 			exit 1; \
 		else \
@@ -46,14 +47,14 @@ clean:
 	@echo "Cleaning up built binaries..."
 	@set -a; . ./$(ENV_FILE); set +a; \
 		rm -f ../buyer-service/$$BUYER_SERVICE_BINARY; \
-		rm -f ../seller-service/$$SELLER_SERVICE_BINARY;
+		rm -f ../seller-service/$$SELLER_SERVICE_BINARY; \
+		rm -f ../authentication-service/$$AUTHENTICATION_SERVICE_BINARY;
 	@echo "Done!"
 
 ## build_buyer_service: builds the buyer-service binary as a linux executable
 build_buyer_service:
 	@echo "Building buyer-service binary..."
 	@set -a; . ./$(ENV_FILE); set +a; \
-		echo "GOFULLPATH is $$GOFULLPATH"; \
 		cd ../buyer-service && env CGO_ENABLED=0 GOOS=linux GOARCH=amd64 $$GOFULLPATH build -o $$BUYER_SERVICE_BINARY ./cmd/api
 	@echo "Done!"
 
@@ -61,15 +62,13 @@ build_buyer_service:
 build_seller_service:
 	@echo "Building seller-service binary..."
 	@set -a; . ./$(ENV_FILE); set +a; \
-		echo "GOFULLPATH is $$GOFULLPATH"; \
 		cd ../seller-service && env CGO_ENABLED=0 GOOS=linux GOARCH=amd64 $$GOFULLPATH build -o $$SELLER_SERVICE_BINARY ./cmd/api
 	@echo "Done!"
 
-## build_authentication_service: builds the seller-service binary as a linux executable
+## build_authentication_service: builds the authentication-service binary as a linux executable
 build_authentication_service:
 	@echo "Building authentication-service binary..."
 	@set -a; . ./$(ENV_FILE); set +a; \
-		echo "GOFULLPATH is $$GOFULLPATH"; \
 		cd ../authentication-service && env CGO_ENABLED=0 GOOS=linux GOARCH=amd64 $$GOFULLPATH build -o $$AUTHENTICATION_SERVICE_BINARY ./cmd/api
 	@echo "Done!"
 

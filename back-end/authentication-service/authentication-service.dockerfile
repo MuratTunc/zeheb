@@ -10,5 +10,5 @@ COPY authenticationServiceApp /app
 # Set the working directory
 WORKDIR /app
 
-# Command to run the buyer service
+# Command to run the authentication service
 CMD ["/app/authenticationServiceApp"]
