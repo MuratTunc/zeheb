@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # Load .env file
-LOCAL_ENV_FILE="$(dirname "$0")/.env"  # Path to the .env file (same directory as this script)
+LOCAL_ENV_FILE="$(dirname "$0")/.env"
 if [ -f "$LOCAL_ENV_FILE" ]; then
   source "$LOCAL_ENV_FILE"
 else
@@ -10,30 +10,22 @@ else
 fi
 
 # Variables from .env file
-SERVER_IP="${SERVER_IP}"  # Loaded from .env
-NEW_USER="${NEW_USER}"    # Loaded from .env
-REPO_GIT_SSH_LINK="${REPO_GIT_SSH_LINK}"  # Loaded from .env GitHub repository SSH link
-SERVER_REPO_DIR="/home/$NEW_USER/zeheb"  # Dynamically set the repository directory based on NEW_USER
-SERVER_BUILD_TOOLS_DIR="/home/$NEW_USER/zeheb/back-end/build-tools"  # Directory for the install script
-SERVER_WEB_APP_DIR="/home/$NEW_USER/zeheb/web-app"  # Directory for the web-app react application
-LOCAL_ENV_FILE="$(dirname "$0")/.env"  # Path to the .env file (same directory as this script)
+SERVER_IP="${SERVER_IP}"  
+NEW_USER="${NEW_USER}"  
+SERVER_REPO_DIR="/home/$NEW_USER/zeheb"
+SERVER_WEB_APP_DIR="/home/$NEW_USER/zeheb/web-app"
+SERVER_BUILD_DIR="/var/www/html"
+DOMAIN_NAME="www.zehebfind.com"
 
-# Color definitions
-RED="\033[0;31m"
+# Colors
 GREEN="\033[0;32m"
+RED="\033[0;31m"
 RESET="\033[0m"
 
-# Function to display success messages
-success() {
-  echo -e "${GREEN}$1${RESET}"
-}
+# Functions
+success() { echo -e "${GREEN}$1${RESET}"; }
+error() { echo -e "${RED}$1${RESET}"; exit 1; }
 
-# Function to display error messages
-error() {
-  echo -e "${RED}$1${RESET}"
-}
-
-# Function to clone the repository on the server
 clone_repository() {
   if [ "$1" = true ]; then
     success "Cloning the GitHub repository on the server droplet..."
@@ -50,104 +42,71 @@ clone_repository() {
         git clone "$REPO_GIT_SSH_LINK" .
       fi
 EOF
-    if [ $? -eq 0 ]; then
-      success "Repository cloned or updated successfully on the server."
-    else
-      error "Failed to clone or update the repository on the server."
-      exit 1
-    fi
-  else
-    success "Skipping clone_repository."
+    [ $? -eq 0 ] && success "Repository cloned or updated successfully!" || error "Failed to clone repository."
   fi
 }
 
-# Function to copy .env file to the server
 transfer_envfile() {
   if [ "$1" = true ]; then
     success "Copying the .env file to the server..."
-    scp "$LOCAL_ENV_FILE" "$NEW_USER@$SERVER_IP:$SERVER_BUILD_TOOLS_DIR/.env"
-    if [ $? -eq 0 ]; then
-      success ".env file copied successfully to $SERVER_BUILD_TOOLS_DIR."
-    else
-      error "Failed to copy the .env file to the server."
-      exit 1
-    fi
-  else
-    success "Skipping transfer_envfile."
+    scp "$LOCAL_ENV_FILE" "$NEW_USER@$SERVER_IP:$SERVER_REPO_DIR/back-end/build-tools/.env"
+    [ $? -eq 0 ] && success "Successfully transferred .env file!" || error "Failed to transfer .env file."
   fi
 }
 
-# Function to run "make" commands for back-end services
 make_back_end_services() {
   if [ "$1" = true ]; then
     success "Running 'make' commands for back-end services..."
     ssh "$NEW_USER@$SERVER_IP" << EOF
       set -e
-      cd "$SERVER_BUILD_TOOLS_DIR"
-      echo "Stopping existing services with 'make down'..."
+      cd "$SERVER_REPO_DIR/back-end/build-tools"
       sudo make down
-      echo "Building and starting services with 'make up_build'..."
       sudo make up_build
 EOF
-    if [ $? -eq 0 ]; then
-      success "Back-end services built and started successfully!"
-    else
-      error "Failed to build and start back-end services."
-      exit 1
-    fi
-  else
-    success "Skipping make_back_end_services."
+    [ $? -eq 0 ] && success "Back-end services restarted successfully!" || error "Failed to restart back-end services."
   fi
 }
 
-# Function to build the web app and configure Nginx
 build_web_app() {
   if [ "$1" = true ]; then
-    success "Building the React web app and configuring Nginx..."
-    ssh "$NEW_USER@$SERVER_IP" << EOF
-      set -e
-      cd "$SERVER_WEB_APP_DIR"
-      echo "Installing npm dependencies..."
-      npm install
-      echo "Building the React application..."
-      npm run build
-      echo "Copying build files to /var/www/html..."
-      sudo mkdir -p /var/www/html
-      sudo rm -rf /var/www/html/*
-      sudo cp -r build/* /var/www/html/
-      echo "Configuring Nginx..."
-      sudo bash -c 'cat > /etc/nginx/sites-available/zehebfind << NGINX_CONFIG
-server {
-    listen 80;
-    server_name www.zehebfind.com;
-    root /var/www/html;
-    index index.html;
-    location / {
-        try_files \$uri /index.html;
-    }
-}
-NGINX_CONFIG'
-      sudo ln -sf /etc/nginx/sites-available/zehebfind /etc/nginx/sites-enabled/zehebfind
-      echo "Reloading Nginx..."
-      sudo nginx -t && sudo systemctl reload nginx
-EOF
-    if [ $? -eq 0 ]; then
-      success "React web app built and deployed successfully!"
-    else
-      error "Failed to build and deploy the React web app."
+    success "Building React web application locally..."
+    LOCAL_WEB_APP_DIR="/home/mutu/projects/zeheb/web-app"
+    
+    # Step 1: Check and build the React app
+    if [ ! -d "$LOCAL_WEB_APP_DIR" ]; then
+      error "Local web app directory $LOCAL_WEB_APP_DIR does not exist."
       exit 1
     fi
-  else
-    success "Skipping build_web_app."
+
+    cd "$LOCAL_WEB_APP_DIR" || exit
+    npm install --legacy-peer-deps || error "Failed to install dependencies."
+    npm run build || error "Failed to build the web app."
+    success "Build completed successfully!"
+
+    # Step 2: Ensure the target directory exists on the server
+    success "Ensuring the target directory exists on the server..."
+    ssh "$NEW_USER@$SERVER_IP" << EOF
+      set -e
+      sudo mkdir -p /var/www/html
+      sudo chown -R $NEW_USER:$NEW_USER /var/www/html
+EOF
+    if [ $? -ne 0 ]; then
+      error "Failed to prepare the target directory on the server."
+      exit 1
+    fi
+
+    # Step 3: Copy build files to the server
+    success "Copying build files to the server..."
+    scp -r "$LOCAL_WEB_APP_DIR/build/" "$NEW_USER@$SERVER_IP:/var/www/html" || error "Failed to copy build files."
+
   fi
 }
 
+
 # Main Execution
-success "********STARTING PRODUCTION APPROVE PROCESS********"
-
-clone_repository true    # Change to false to skip
-transfer_envfile true    # Change to false to skip
-make_back_end_services true  # Change to false to skip
-build_web_app true       # Change to false to skip
-
+success "******** STARTING PRODUCTION APPROVE PROCESS ********"
+clone_repository false
+transfer_envfile false
+make_back_end_services false
+build_web_app true
 success "All tasks completed successfully!"

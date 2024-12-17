@@ -178,6 +178,48 @@ EOF
   fi
 }
 
+# Function to configure Nginx on the server
+nginx_site_available() {
+  success "Configuring Nginx on the server..."
+
+  # SSH into the server and set up Nginx
+  ssh "$NEW_USER@$SERVER_IP" << EOF
+    set -e
+
+    # Create the Nginx configuration
+    sudo tee /etc/nginx/sites-available/$DOMAIN_NAME > /dev/null << NGINX_CONF
+server {
+    listen 80;
+    server_name www.\$DOMAIN_NAME \$DOMAIN_NAME;
+
+    location / {
+        # Define the root directory if needed (you can change this based on your app's location)
+        root /var/www/html;
+        index index.html;
+    }
+}
+NGINX_CONF
+
+    # Enable the Nginx site
+    sudo ln -sf /etc/nginx/sites-available/$DOMAIN_NAME /etc/nginx/sites-enabled/
+
+    # Test Nginx configuration and reload if successful
+    if sudo nginx -t; then
+      sudo systemctl reload nginx
+    else
+      error "Nginx configuration test failed."
+      exit 1
+    fi
+EOF
+
+  if [ $? -eq 0 ]; then
+    success "Nginx configured and reloaded successfully!"
+  else
+    error "Failed to configure Nginx."
+    exit 1
+  fi
+}
+
 # Main Execution
 success "Starting server droplet setup process..."
 setup_new_user
@@ -185,5 +227,6 @@ configure_private_ssh_key
 clone_repository
 transfer_envfile
 install
+nginx_site_available
 make_back_end_services
 success "All tasks completed successfully!"
