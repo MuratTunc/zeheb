@@ -14,7 +14,8 @@ SERVER_IP="${SERVER_IP}"  # Loaded from .env
 NEW_USER="${NEW_USER}"    # Loaded from .env
 REPO_GIT_SSH_LINK="${REPO_GIT_SSH_LINK}"  # Loaded from .env GitHub repository SSH link
 SERVER_REPO_DIR="/home/$NEW_USER/zeheb"  # Dynamically set the repository directory based on NEW_USER
-SERVER_BULID_TOOLS_DIR="/home/$NEW_USER/zeheb/back-end/build-tools"  # Directory for the install script
+SERVER_BUILD_TOOLS_DIR="/home/$NEW_USER/zeheb/back-end/build-tools"  # Directory for the install script
+SERVER_WEB_APP_DIR="/home/$NEW_USER/zeheb/web-app"  # Directory for the web-app react application
 LOCAL_ENV_FILE="$(dirname "$0")/.env"  # Path to the .env file (same directory as this script)
 
 # Color definitions
@@ -34,66 +35,119 @@ error() {
 
 # Function to clone the repository on the server
 clone_repository() {
-  success "Cloning the GitHub repository on the server droplet..."
-  ssh "$NEW_USER@$SERVER_IP" << EOF
-    set -e
-    ssh-keyscan github.com >> ~/.ssh/known_hosts
-    mkdir -p "$SERVER_REPO_DIR"
-    cd "$SERVER_REPO_DIR"
-    if [ -d ".git" ]; then
-      echo "Repository already exists. Pulling latest changes..."
-      git pull
-    else
-      echo "Cloning the repository into $SERVER_REPO_DIR..."
-      git clone "$REPO_GIT_SSH_LINK" .
-    fi
+  if [ "$1" = true ]; then
+    success "Cloning the GitHub repository on the server droplet..."
+    ssh "$NEW_USER@$SERVER_IP" << EOF
+      set -e
+      ssh-keyscan github.com >> ~/.ssh/known_hosts
+      mkdir -p "$SERVER_REPO_DIR"
+      cd "$SERVER_REPO_DIR"
+      if [ -d ".git" ]; then
+        echo "Repository already exists. Pulling latest changes..."
+        git pull
+      else
+        echo "Cloning the repository into $SERVER_REPO_DIR..."
+        git clone "$REPO_GIT_SSH_LINK" .
+      fi
 EOF
-
-  if [ $? -eq 0 ]; then
-    success "Repository cloned or updated successfully on the server."
+    if [ $? -eq 0 ]; then
+      success "Repository cloned or updated successfully on the server."
+    else
+      error "Failed to clone or update the repository on the server."
+      exit 1
+    fi
   else
-    error "Failed to clone or update the repository on the server."
-    exit 1
+    success "Skipping clone_repository."
   fi
 }
 
 # Function to copy .env file to the server
 transfer_envfile() {
-  success "Copying the .env file to the server..."
-  scp "$LOCAL_ENV_FILE" "$NEW_USER@$SERVER_IP:$SERVER_BULID_TOOLS_DIR/.env"
-  if [ $? -eq 0 ]; then
-    success ".env file copied successfully to $SERVER_BULID_TOOLS_DIR."
+  if [ "$1" = true ]; then
+    success "Copying the .env file to the server..."
+    scp "$LOCAL_ENV_FILE" "$NEW_USER@$SERVER_IP:$SERVER_BUILD_TOOLS_DIR/.env"
+    if [ $? -eq 0 ]; then
+      success ".env file copied successfully to $SERVER_BUILD_TOOLS_DIR."
+    else
+      error "Failed to copy the .env file to the server."
+      exit 1
+    fi
   else
-    error "Failed to copy the .env file to the server."
-    exit 1
+    success "Skipping transfer_envfile."
   fi
 }
 
-
-
 # Function to run "make" commands for back-end services
 make_back_end_services() {
-  success "Running 'make' commands for back-end services..."
-  ssh "$NEW_USER@$SERVER_IP" << EOF
-    set -e
-    cd "$SERVER_BULID_TOOLS_DIR"
-    echo "Stopping existing services with 'make down'..."
-    sudo make down
-    echo "Building and starting services with 'make up_build'..."
-    sudo make up_build
+  if [ "$1" = true ]; then
+    success "Running 'make' commands for back-end services..."
+    ssh "$NEW_USER@$SERVER_IP" << EOF
+      set -e
+      cd "$SERVER_BUILD_TOOLS_DIR"
+      echo "Stopping existing services with 'make down'..."
+      sudo make down
+      echo "Building and starting services with 'make up_build'..."
+      sudo make up_build
 EOF
-
-  if [ $? -eq 0 ]; then
-    success "Back-end services built and started successfully!"
+    if [ $? -eq 0 ]; then
+      success "Back-end services built and started successfully!"
+    else
+      error "Failed to build and start back-end services."
+      exit 1
+    fi
   else
-    error "Failed to build and start back-end services."
-    exit 1
+    success "Skipping make_back_end_services."
+  fi
+}
+
+# Function to build the web app and configure Nginx
+build_web_app() {
+  if [ "$1" = true ]; then
+    success "Building the React web app and configuring Nginx..."
+    ssh "$NEW_USER@$SERVER_IP" << EOF
+      set -e
+      cd "$SERVER_WEB_APP_DIR"
+      echo "Installing npm dependencies..."
+      npm install
+      echo "Building the React application..."
+      npm run build
+      echo "Copying build files to /var/www/html..."
+      sudo mkdir -p /var/www/html
+      sudo rm -rf /var/www/html/*
+      sudo cp -r build/* /var/www/html/
+      echo "Configuring Nginx..."
+      sudo bash -c 'cat > /etc/nginx/sites-available/zehebfind << NGINX_CONFIG
+server {
+    listen 80;
+    server_name www.zehebfind.com;
+    root /var/www/html;
+    index index.html;
+    location / {
+        try_files \$uri /index.html;
+    }
+}
+NGINX_CONFIG'
+      sudo ln -sf /etc/nginx/sites-available/zehebfind /etc/nginx/sites-enabled/zehebfind
+      echo "Reloading Nginx..."
+      sudo nginx -t && sudo systemctl reload nginx
+EOF
+    if [ $? -eq 0 ]; then
+      success "React web app built and deployed successfully!"
+    else
+      error "Failed to build and deploy the React web app."
+      exit 1
+    fi
+  else
+    success "Skipping build_web_app."
   fi
 }
 
 # Main Execution
 success "********STARTING PRODUCTION APPROVE PROCESS********"
-clone_repository
-transfer_envfile
-make_back_end_services
+
+clone_repository true    # Change to false to skip
+transfer_envfile true    # Change to false to skip
+make_back_end_services true  # Change to false to skip
+build_web_app true       # Change to false to skip
+
 success "All tasks completed successfully!"
