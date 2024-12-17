@@ -13,8 +13,9 @@ jobs:
       SERVER_IP: ${{ secrets.SERVER_IP }}
       SERVER_USER_NAME: ${{ secrets.SERVER_USER_NAME }}
       SERVER_PROJECT_DIR: "/home/${{ secrets.SERVER_USER_NAME }}/zeheb"
-      REPO: "git@github.com:MuratTunc/zeheb.git"
-      RUN_BACKEND_DEPLOY: true  # Set to true or false to toggle back-end deployment
+      REPO: ${{ secrets.SERVER_REPO }} # "git@github.com:MuratTunc/zeheb.git"
+      RUN_CLONE_REPO: false  # Set to true or false to toggle repository cloning
+      RUN_BACKEND_DEPLOY: false  # Set to true or false to toggle back-end deployment
       RUN_FRONTEND_DEPLOY: false  # Set to true or false to toggle front-end deployment
 
     steps:
@@ -37,32 +38,33 @@ jobs:
           mkdir -p ~/.ssh
           ssh-keyscan -H ${{ env.SERVER_IP }} >> ~/.ssh/known_hosts || { echo "Failed to add host to known hosts"; exit 1; }
 
-      # Deploy the repository to the server
+      # Clone the repository to the server (conditionally)
       - name: Clone Repository to Server
+        if: env.RUN_CLONE_REPO == 'true'
         run: |
           echo "Deploying repository to the server..."
           ssh -T -o StrictHostKeyChecking=no ${{ env.SERVER_USER_NAME }}@${{ env.SERVER_IP }} << EOF
           set -e  # Stop script on error
 
           # Check if the project directory exists
-            if [ ! -d "${{ env.SERVER_PROJECT_DIR }}" ]; then
-              echo "Directory does not exist. Creating project directory and cloning repository..."
+          if [ ! -d "${{ env.SERVER_PROJECT_DIR }}" ]; then
+            echo "Directory does not exist. Creating project directory and cloning repository..."
+            mkdir -p "${{ env.SERVER_PROJECT_DIR }}"
+            git clone "${{ env.REPO }}" "${{ env.SERVER_PROJECT_DIR }}"
+          else
+            # Check if the directory is a valid Git repository
+            if [ ! -d "${{ env.SERVER_PROJECT_DIR }}/.git" ]; then
+              echo "Directory exists but is not a valid Git repository. Re-cloning repository..."
+              rm -rf "${{ env.SERVER_PROJECT_DIR }}"
               mkdir -p "${{ env.SERVER_PROJECT_DIR }}"
               git clone "${{ env.REPO }}" "${{ env.SERVER_PROJECT_DIR }}"
             else
-              # Check if the directory is a valid Git repository
-              if [ ! -d "${{ env.SERVER_PROJECT_DIR }}/.git" ]; then
-                echo "Directory exists but is not a valid Git repository. Re-cloning repository..."
-                rm -rf "${{ env.SERVER_PROJECT_DIR }}"
-                mkdir -p "${{ env.SERVER_PROJECT_DIR }}"
-                git clone "${{ env.REPO }}" "${{ env.SERVER_PROJECT_DIR }}"
-              else
-                echo "Directory exists and is a valid Git repository. Pulling latest changes..."
-                cd "${{ env.SERVER_PROJECT_DIR }}"
-                git reset --hard
-                git pull origin main
-              fi
+              echo "Directory exists and is a valid Git repository. Pulling latest changes..."
+              cd "${{ env.SERVER_PROJECT_DIR }}"
+              git reset --hard
+              git pull origin main
             fi
+          fi
           EOF
 
       # Deploy Back-End Services

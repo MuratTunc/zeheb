@@ -29,7 +29,7 @@ check_ports:
 		echo "Buyer Service Binary: $$BUYER_SERVICE_BINARY"; \
 		echo "Seller Service Binary: $$SELLER_SERVICE_BINARY"; \
 		echo "Authentication Service Binary: $$AUTHENTICATION_SERVICE_BINARY"; \
-		if lsof -i :$$BUYER_SERVICE_PORT || lsof -i :$$SELLER_SERVICE_PORT; || lsof -i :$$AUTHENTICATION_SERVICE_PORT; then \
+		if lsof -i :$$BUYER_SERVICE_PORT || lsof -i :$$SELLER_SERVICE_PORT || lsof -i :$$AUTHENTICATION_SERVICE_PORT; then \
 			echo "Error: One or more ports are already in use."; \
 			exit 1; \
 		else \
