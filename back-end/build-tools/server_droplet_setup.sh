@@ -190,12 +190,13 @@ nginx_site_available() {
     sudo tee /etc/nginx/sites-available/$DOMAIN_NAME > /dev/null << NGINX_CONF
 server {
     listen 80;
-    server_name www.\$DOMAIN_NAME \$DOMAIN_NAME;
+    server_name zehebfind.com www.zehebfind.com;
+
+    root /var/www/html/build;
+    index index.html;
 
     location / {
-        # Define the root directory if needed (you can change this based on your app's location)
-        root /var/www/html;
-        index index.html;
+        try_files $uri $uri/ =404;
     }
 }
 NGINX_CONF
@@ -206,6 +207,8 @@ NGINX_CONF
     # Test Nginx configuration and reload if successful
     if sudo nginx -t; then
       sudo systemctl reload nginx
+      sudo chown -R www-data:www-data /var/www/html/build
+      sudo chmod -R 755 /var/www/html/build
     else
       error "Nginx configuration test failed."
       exit 1
@@ -220,6 +223,40 @@ EOF
   fi
 }
 
+build_web_app() {
+    success "Building React web application locally..."
+    LOCAL_WEB_APP_DIR="/home/mutu/projects/zeheb/web-app"
+    
+    # Step 1: Check and build the React app
+    if [ ! -d "$LOCAL_WEB_APP_DIR" ]; then
+      error "Local web app directory $LOCAL_WEB_APP_DIR does not exist."
+      exit 1
+    fi
+
+    cd "$LOCAL_WEB_APP_DIR" || exit
+    npm install --legacy-peer-deps || error "Failed to install dependencies."
+    npm run build || error "Failed to build the web app."
+    success "Build completed successfully!"
+
+    # Step 2: Ensure the target directory exists on the server
+    success "Ensuring the target directory exists on the server..."
+    ssh "$NEW_USER@$SERVER_IP" << EOF
+      set -e
+      sudo mkdir -p /var/www/html
+      sudo chown -R $NEW_USER:$NEW_USER /var/www/html
+EOF
+    if [ $? -ne 0 ]; then
+      error "Failed to prepare the target directory on the server."
+      exit 1
+    fi
+
+    # Step 3: Copy build files to the server
+    success "Copying build files to the server..."
+    scp -r "$LOCAL_WEB_APP_DIR/build/" "$NEW_USER@$SERVER_IP:/var/www/html" || error "Failed to copy build files."
+
+  
+}
+
 # Main Execution
 success "Starting server droplet setup process..."
 setup_new_user
@@ -229,4 +266,5 @@ transfer_envfile
 install
 nginx_site_available
 make_back_end_services
+build_web_app
 success "All tasks completed successfully!"

@@ -13,9 +13,6 @@ fi
 SERVER_IP="${SERVER_IP}"  
 NEW_USER="${NEW_USER}"  
 SERVER_REPO_DIR="/home/$NEW_USER/zeheb"
-SERVER_WEB_APP_DIR="/home/$NEW_USER/zeheb/web-app"
-SERVER_BUILD_DIR="/var/www/html"
-DOMAIN_NAME="www.zehebfind.com"
 
 # Colors
 GREEN="\033[0;32m"
@@ -105,8 +102,8 @@ EOF
 
 # Main Execution
 success "******** STARTING PRODUCTION APPROVE PROCESS ********"
-clone_repository false
-transfer_envfile false
-make_back_end_services false
+clone_repository true
+transfer_envfile true
+make_back_end_services true
 build_web_app true
 success "All tasks completed successfully!"
