@@ -178,39 +178,7 @@ EOF
   fi
 }
 
-# Function to configure Nginx on the server
-nginx_site_available() {
-  success "Configuring Nginx on the server..."
-
-  # SSH into the server and set up Nginx
-  ssh "$NEW_USER@$SERVER_IP" << EOF
-    set -e
-
-    # Copy the Nginx configuration file from the cloned repository to the correct location
-    sudo cp $SERVER_BULID_TOOLS_DIR/$DOMAIN_NAME /etc/nginx/sites-available/$DOMAIN_NAME
-
-    # Enable the Nginx site
-    sudo ln -sf /etc/nginx/sites-available/$DOMAIN_NAME /etc/nginx/sites-enabled/
-
-    # Test Nginx configuration and reload if successful
-    if sudo nginx -t; then
-      sudo systemctl reload nginx
-      sudo chown -R www-data:www-data /var/www/html/build
-      sudo chmod -R 755 /var/www/html/build
-    else
-      error "Nginx configuration test failed."
-      exit 1
-    fi
-EOF
-
-  if [ $? -eq 0 ]; then
-    success "Nginx configured and reloaded successfully!"
-  else
-    error "Failed to configure Nginx."
-    exit 1
-  fi
-}
-
+# Function to  build web-app react apps and copy build files to derver droplet
 build_web_app() {
     success "Building React web application locally..."
     LOCAL_WEB_APP_DIR="/home/mutu/projects/zeheb/web-app"
@@ -245,6 +213,39 @@ EOF
   
 }
 
+# Function to configure Nginx on the server
+nginx_site_available() {
+  success "Configuring Nginx on the server..."
+
+  # SSH into the server and set up Nginx
+  ssh "$NEW_USER@$SERVER_IP" << EOF
+    set -e
+
+    # Copy the Nginx configuration file from the cloned repository to the correct location
+    sudo cp $SERVER_BULID_TOOLS_DIR/$DOMAIN_NAME /etc/nginx/sites-available/$DOMAIN_NAME
+
+    # Enable the Nginx site
+    sudo ln -sf /etc/nginx/sites-available/$DOMAIN_NAME /etc/nginx/sites-enabled/
+
+    # Test Nginx configuration and reload if successful
+    if sudo nginx -t; then
+      sudo systemctl reload nginx
+      sudo chown -R www-data:www-data /var/www/html/build
+      sudo chmod -R 755 /var/www/html/build
+    else
+      error "Nginx configuration test failed."
+      exit 1
+    fi
+EOF
+
+  if [ $? -eq 0 ]; then
+    success "Nginx configured and reloaded successfully!"
+  else
+    error "Failed to configure Nginx."
+    exit 1
+  fi
+}
+
 # Main Execution
 success "Starting server droplet setup process..."
 setup_new_user
@@ -252,7 +253,7 @@ configure_private_ssh_key
 clone_repository
 transfer_envfile
 install
-nginx_site_available
 make_back_end_services
 build_web_app
+nginx_site_available
 success "All tasks completed successfully!"
