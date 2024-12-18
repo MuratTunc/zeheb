@@ -186,26 +186,8 @@ nginx_site_available() {
   ssh "$NEW_USER@$SERVER_IP" << EOF
     set -e
 
-    # Create the Nginx configuration
-    sudo tee /etc/nginx/sites-available/$DOMAIN_NAME > /dev/null << NGINX_CONF
-server {
-    listen 80;
-    server_name zehebfind.com www.zehebfind.com;
-
-    root /var/www/html/build;
-    index index.html;
-
-    location / {
-        try_files $uri /index.html;
-    }
-
-    location ~* \.(?:ico|css|js|gif|jpe?g|png|woff2?|eot|ttf|svg|mp4|webm|ogv|webp)$ {
-        expires 6M;
-        access_log off;
-        add_header Cache-Control "public";
-    }
-}
-NGINX_CONF
+    # Copy the Nginx configuration file from the cloned repository to the correct location
+    sudo cp ~/$SERVER_BULID_TOOLS_DIR/$DOMAIN_NAME /etc/nginx/sites-available/$DOMAIN_NAME
 
     # Enable the Nginx site
     sudo ln -sf /etc/nginx/sites-available/$DOMAIN_NAME /etc/nginx/sites-enabled/
