@@ -187,7 +187,7 @@ nginx_site_available() {
     set -e
 
     # Copy the Nginx configuration file from the cloned repository to the correct location
-    sudo cp ~/$SERVER_BULID_TOOLS_DIR/$DOMAIN_NAME /etc/nginx/sites-available/$DOMAIN_NAME
+    sudo cp $SERVER_BULID_TOOLS_DIR/$DOMAIN_NAME /etc/nginx/sites-available/$DOMAIN_NAME
 
     # Enable the Nginx site
     sudo ln -sf /etc/nginx/sites-available/$DOMAIN_NAME /etc/nginx/sites-enabled/
