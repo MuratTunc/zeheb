@@ -1,0 +1,48 @@
+.header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%; /* Full-width header */
+    height: 60px; /* Adjust height as needed */
+    background-color: rgba(40, 44, 52, 0.9); /* Semi-transparent background */
+    color: white;
+    padding: 0 20px;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2); /* Subtle shadow */
+    z-index: 1000; /* Ensure it stays above content */
+    box-sizing: border-box; /* Ensures padding is included in width */
+  }
+  
+  .logo {
+    font-size: 1.5rem;
+    font-weight: bold;
+    white-space: nowrap; /* Prevents text wrapping */
+  }
+  
+  .nav {
+    display: flex;
+    align-items: center;
+  }
+  
+  .login-tab {
+    text-decoration: none;
+    color: white;
+    font-size: 1rem;
+    padding: 5px 10px;
+    border: 1px solid white;
+    border-radius: 5px;
+    transition: background-color 0.3s ease, color 0.3s ease;
+    white-space: nowrap; /* Prevents text wrapping */
+  }
+  
+  .login-tab:hover {
+    background-color: white;
+    color: #282c34;
+  }
+  
+  .login-tab {
+    margin-right: auto; /* Moves the login tab to the far left */
+  }
+  
