@@ -27,7 +27,7 @@ const Header = () => {
       {showSignin && (
         <div className="popup">
           <div className="popup-content">
-            <button className="close-btn" onClick={handleClosePopup}>×</button>
+            {/* Removed the close "×" button */}
             <Signin onCancel={handleClosePopup} /> {/* Signin component with cancel button */}
           </div>
         </div>
@@ -36,7 +36,7 @@ const Header = () => {
       {showSignup && (
         <div className="popup">
           <div className="popup-content">
-            <button className="close-btn" onClick={handleClosePopup}>×</button>
+            {/* Removed the close "×" button */}
             <Signup onCancel={handleClosePopup} /> {/* Signup component with cancel button */}
           </div>
         </div>
