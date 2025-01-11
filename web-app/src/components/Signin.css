@@ -1,0 +1,26 @@
+.signin {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+.signin input {
+  padding: 5px;
+  font-size: 14px;
+}
+
+.signin button {
+  padding: 5px 10px;
+  margin-top: 5px;
+  font-size: 14px;
+  cursor: pointer;
+}
+
+.cancel-btn {
+  background-color: red; /* Set background color to red */
+  color: white;          /* Set text color to white */
+  border: none;          /* Remove border */
+  padding: 5px 10px;     /* Adjust padding */
+  font-size: 14px;       /* Set font size */
+  cursor: pointer;      /* Change cursor to pointer */
+}

@@ -1,24 +1,47 @@
-import React from 'react';
+import React, { useState } from 'react';
 import './Header.css';
-import Login from './Login'; // Import Login component
+import Signin from './Signin';
+import Signup from './Signup';
 
-const Header = ({ loggedIn, username, onLogout, onLogin }) => {
+const Header = () => {
+  const [showSignin, setShowSignin] = useState(false);
+  const [showSignup, setShowSignup] = useState(false);
+
+  const handleClosePopup = () => {
+    setShowSignin(false);
+    setShowSignup(false);
+  };
+
   return (
-    <header className="header">
-      <h1 className="logo">ZEHEB</h1>
-      <nav className="nav">
-        {loggedIn ? (
-          <div>
-            <span className="username">{username}</span>
-            <button className="logout-button" onClick={onLogout}>
-              Logout
-            </button>
+    <>
+      <header className="header">
+        <div className="header-left">
+          <h1>MyApp</h1>
+        </div>
+        <div className="header-right">
+          <button onClick={() => setShowSignin(true)}>SIGN IN</button>
+          <button onClick={() => setShowSignup(true)}>SIGN UP</button>
+        </div>
+      </header>
+
+      {showSignin && (
+        <div className="popup">
+          <div className="popup-content">
+            <button className="close-btn" onClick={handleClosePopup}>×</button>
+            <Signin onCancel={handleClosePopup} /> {/* Signin component with cancel button */}
           </div>
-        ) : (
-          <Login onLogin={onLogin} />
-        )}
-      </nav>
-    </header>
+        </div>
+      )}
+
+      {showSignup && (
+        <div className="popup">
+          <div className="popup-content">
+            <button className="close-btn" onClick={handleClosePopup}>×</button>
+            <Signup onCancel={handleClosePopup} /> {/* Signup component with cancel button */}
+          </div>
+        </div>
+      )}
+    </>
   );
 };
 
