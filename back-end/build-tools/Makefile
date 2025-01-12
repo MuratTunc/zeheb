@@ -10,7 +10,7 @@ ENV_FILE := .env
 ##Clean up the built binaries.
 
 ## up_build: stops docker-compose (if running), builds all projects, checks ports, and starts docker-compose
-up_build: down clean build_buyer_service build_seller_service build_authentication_service
+up_build: down clean build_buyer_service build_seller_service build_authentication_service build_tcmbratings_service
 	@echo "Checking if service ports are available..."
 	$(MAKE) check_ports
 	@echo "Building (when required) and starting docker images with environment variables..."
@@ -29,7 +29,8 @@ check_ports:
 		echo "Buyer Service Binary: $$BUYER_SERVICE_BINARY"; \
 		echo "Seller Service Binary: $$SELLER_SERVICE_BINARY"; \
 		echo "Authentication Service Binary: $$AUTHENTICATION_SERVICE_BINARY"; \
-		if lsof -i :$$BUYER_SERVICE_PORT || lsof -i :$$SELLER_SERVICE_PORT || lsof -i :$$AUTHENTICATION_SERVICE_PORT; then \
+		echo "TcmbRatings Service Binary: $$TCMBRATINGS_SERVICE_BINARY"; \
+		if lsof -i :$$BUYER_SERVICE_PORT || lsof -i :$$SELLER_SERVICE_PORT || lsof -i :$$AUTHENTICATION_SERVICE_PORT || lsof -i :$$TCMBRATINGS_SERVICE_PORT; then \
 			echo "Error: One or more ports are already in use."; \
 			exit 1; \
 		else \
@@ -48,7 +49,8 @@ clean:
 	@set -a; . ./$(ENV_FILE); set +a; \
 		rm -f ../buyer-service/$$BUYER_SERVICE_BINARY; \
 		rm -f ../seller-service/$$SELLER_SERVICE_BINARY; \
-		rm -f ../authentication-service/$$AUTHENTICATION_SERVICE_BINARY;
+		rm -f ../authentication-service/$$AUTHENTICATION_SERVICE_BINARY; \
+		rm -f ../tcmbratings-service/$$TCMBRATINGS_SERVICE_BINARY;
 	@echo "Done!"
 
 ## build_buyer_service: builds the buyer-service binary as a linux executable
@@ -71,6 +73,13 @@ build_authentication_service:
 	@set -a; . ./$(ENV_FILE); set +a; \
 		cd ../authentication-service && env CGO_ENABLED=0 GOOS=linux GOARCH=amd64 $$GOFULLPATH build -o $$AUTHENTICATION_SERVICE_BINARY ./cmd/api
 	@echo "Done!"
+
+## build_tcmbratings_service: builds the authentication-service binary as a linux executable
+build_tcmbratings_service:
+	@echo "Building tcmbratings-service binary..."
+	@set -a; . ./$(ENV_FILE); set +a; \
+		cd ../tcmbratings-service && env CGO_ENABLED=0 GOOS=linux GOARCH=amd64 $$GOFULLPATH build -o $$TCMBRATINGS_SERVICE_BINARY ./cmd/api
+	@echo "Done!"	
 
 ## logs: shows logs from all services
 logs:

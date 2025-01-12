@@ -1,5 +1,4 @@
-/* Header.css - Updated Styles for Modern Popups with Improved Borders & Backgrounds */
-
+/* Header styles */
 .header {
   position: fixed;
   top: 0;
@@ -35,14 +34,15 @@
   color: #000;
   font-size: 14px;
   cursor: pointer;
-  transition: background-color 0.3s ease;
+  transition: background-color 0.3s ease, transform 0.2s ease;
 }
 
 .header-right button:hover {
   background-color: #21a1f1;
+  transform: scale(1.05); /* Slight hover effect */
 }
 
-/* Background overlay for the popup */
+/* Popup background overlay */
 .popup {
   position: fixed;
   top: 0;
@@ -54,25 +54,25 @@
   justify-content: center;
   align-items: center;
   z-index: 1001;
-  animation: fadeIn 0.3s ease-out; /* Fade-in effect */
+  animation: fadeIn 0.3s ease-out; /* Smooth fade-in effect */
 }
 
-/* Popup content box with gradient background */
+/* Popup content box with enhanced styles */
 .popup-content {
-  background: linear-gradient(135deg, #f0f4f8, #d0e1f9); /* Soft gradient background */
+  background: linear-gradient(135deg, #f0f4f8, #d0e1f9); /* Soft gradient */
   padding: 30px;
-  border-radius: 15px; /* More rounded corners */
+  border-radius: 15px;
   width: 400px;
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2); /* Soft shadow with more depth */
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2); /* Depth shadow */
   display: flex;
   flex-direction: column;
   gap: 20px;
   transform: translateY(30px);
   opacity: 0;
-  animation: slideUp 0.4s forwards, fadeIn 0.4s forwards; /* Slide-up and fade-in animations */
+  animation: slideUp 0.4s forwards, fadeIn 0.4s forwards;
 }
 
-/* Slide-up animation */
+/* Animations */
 @keyframes slideUp {
   to {
     transform: translateY(0);
@@ -80,7 +80,6 @@
   }
 }
 
-/* Fade-in effect */
 @keyframes fadeIn {
   from {
     opacity: 0;
@@ -90,34 +89,37 @@
   }
 }
 
-/* Cancel button inside the popup with soft border and gradient */
+/* Cancel button */
 .cancel-btn {
   padding: 12px 25px;
-  background: linear-gradient(135deg, #f05a28, #e94e77); /* Gradient background for the cancel button */
+  background: linear-gradient(135deg, #f05a28, #e94e77); /* Gradient button */
   color: white;
-  border: 2px solid #e94e77; /* Subtle border that matches the button */
-  border-radius: 50px; /* Rounded edges for the button */
+  border: 2px solid #e94e77;
+  border-radius: 50px; /* Round shape */
   font-size: 14px;
   cursor: pointer;
   transition: background-color 0.3s ease, transform 0.2s ease, box-shadow 0.2s ease;
 }
 
 .cancel-btn:hover {
-  background: linear-gradient(135deg, #e94e77, #f05a28); /* Reverse gradient on hover */
-  transform: scale(1.05); /* Slight scale on hover */
-  box-shadow: 0 0 12px rgba(233, 78, 119, 0.5); /* Add soft shadow on hover */
+  background: linear-gradient(135deg, #e94e77, #f05a28); /* Reverse gradient */
+  transform: scale(1.05);
+  box-shadow: 0 0 12px rgba(233, 78, 119, 0.5); /* Glow effect */
+}
+
+.cancel-btn:active {
+  transform: scale(0.98); /* Slight press effect */
 }
 
 .cancel-btn:focus {
   outline: none;
 }
 
-/* Optional: Add focus ring for better accessibility */
 .cancel-btn:focus-visible {
-  outline: 3px solid #61dafb;
+  outline: 3px solid #61dafb; /* Accessibility outline */
 }
 
-/* For a better contrast effect and a modern look, use subtle hover effects */
-.cancel-btn:active {
-  transform: scale(0.98); /* Slight shrink effect on button click */
+/* Optional: Reduce padding inside the popup */
+.popup-content > * {
+  margin-top: 0; /* Remove excessive top spacing for children elements */
 }

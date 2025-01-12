@@ -12,8 +12,8 @@ func main() {
 
 	app := Config{}
 
-	ServicePort := os.Getenv("TCMB_RATINGS_SERVICE_PORT")
-	ServiceName := os.Getenv("TCMB_RATINGS_SERVICE_NAME")
+	ServicePort := os.Getenv("TCMBRATINGS_SERVICE_PORT")
+	ServiceName := os.Getenv("TCMBRATINGS_SERVICE_NAME")
 
 	if ServicePort == "" || ServiceName == "" {
 		log.Fatal("Error: Service environment variables are not set")

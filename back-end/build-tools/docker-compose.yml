@@ -60,13 +60,13 @@ services:
       context: ./../tcmbratings-service
       dockerfile: ./../tcmbratings-service/tcmbratings-service.dockerfile
     image: tcmbratings-service-img
-    container_name: ${TCMB_RATINGS_SERVICE_NAME}
+    container_name: ${TCMBRATINGS_SERVICE_NAME}
     restart: always
     ports:
-      - "${TCMB_RATINGS_SERVICE_PORT}:${TCMB_RATINGS_SERVICE_PORT}"
+      - "${TCMBRATINGS_SERVICE_PORT}:${TCMBRATINGS_SERVICE_PORT}"
     environment:
-      - TCMB_RATINGS_SERVICE_PORT=${TCMB_RATINGS_SERVICE_PORT}
-      - TCMB_RATINGS_SERVICE_NAME=${TCMB_RATINGS_SERVICE_NAME}
+      - TCMBRATINGS_SERVICE_PORT=${TCMBRATINGS_SERVICE_PORT}
+      - TCMBRATINGS_SERVICE_NAME=${TCMBRATINGS_SERVICE_NAME}
     env_file:
       - .env
     deploy:
