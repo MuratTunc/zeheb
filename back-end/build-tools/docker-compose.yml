@@ -55,11 +55,29 @@ services:
       mode: replicated
       replicas: 1
 
+  tcmbratings-service:
+    build:
+      context: ./../tcmbratings-service
+      dockerfile: ./../tcmbratings-service/tcmbratings-service.dockerfile
+    image: tcmbratings-service-img
+    container_name: ${TCMB_RATINGS_SERVICE_NAME}
+    restart: always
+    ports:
+      - "${TCMB_RATINGS_SERVICE_PORT}:${TCMB_RATINGS_SERVICE_PORT}"
+    environment:
+      - TCMB_RATINGS_SERVICE_PORT=${TCMB_RATINGS_SERVICE_PORT}
+      - TCMB_RATINGS_SERVICE_NAME=${TCMB_RATINGS_SERVICE_NAME}
+    env_file:
+      - .env
+    deploy:
+      mode: replicated
+      replicas: 1    
+
   postgres:
     image: postgres:16.6
     container_name: postgres
     ports:
-      - "${POSTGRES_DB_PORT}:5432" # Map the PostgreSQL default port
+      - "${POSTGRES_DB_PORT}:${POSTGRES_DB_PORT}"
     restart: always
     environment:
       POSTGRES_USER: ${POSTGRES_DB_USER}
