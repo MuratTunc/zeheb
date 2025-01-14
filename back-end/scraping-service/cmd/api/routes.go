@@ -48,8 +48,7 @@ func (app *Config) routes() http.Handler {
 
 	// API Routes
 	mux.Route("/api/v1", func(r chi.Router) {
-		r.Get("/tcmbratings/usdtry", app.GetUSDTRYHandler)  // Add GET method
-		r.Post("/tcmbratings/usdtry", app.GetUSDTRYHandler) // Keep POST method
+		r.Get("/scraping/goldprice", app.ScrapeGoldPriceHandler) // Add GET method
 	})
 
 	return mux

@@ -2,21 +2,18 @@ import React, { useState, useEffect } from "react";
 import axios from "axios";
 
 const GoldPrices = () => {
-  const [prices, setPrices] = useState(null);
+  const [goldPriceTRY, setGoldPriceTRY] = useState(null);
   const [error, setError] = useState(null);
 
   useEffect(() => {
     const fetchGoldPrices = async () => {
       try {
-        const response = await axios.post(
-          "http://localhost:8083/api/v1/tcmbratings/gold-prices",
-          { currencyCode: "USD" } // Always fetch for "XAU"
-        );
-        setPrices(response.data);
-        setError(null);
+        const response = await axios.get("http://localhost:8084/api/v1/scraping/goldprice");
+        setGoldPriceTRY(response.data.goldPriceTRY); // Update with the scraped price field
+        setError(null); // Clear errors on successful fetch
       } catch (err) {
         setError("Failed to fetch gold prices");
-        setPrices(null);
+        setGoldPriceTRY(null);
       }
     };
 
@@ -28,14 +25,14 @@ const GoldPrices = () => {
 
   return (
     <div>
-      {prices ? (
-        <p className="text-yellow-400 font-medium">
-          Gold Prices: Buy: {prices.forexBuying} | Sell: {prices.forexSelling}
+      {goldPriceTRY !== null ? (
+        <p className="text-yellow-100 font-medium">
+          GRAM ALTIN: {goldPriceTRY.toFixed(2)} ₺
         </p>
       ) : error ? (
         <p className="text-red-500 font-medium">{error}</p>
       ) : (
-        <p className="text-gray-400">Loading gold prices...</p>
+        <p className="text-gray-400">Loading gold price...</p>
       )}
     </div>
   );

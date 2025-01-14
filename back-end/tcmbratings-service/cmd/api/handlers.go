@@ -1,63 +1,40 @@
 package main
 
 import (
-	"database/sql"
 	"encoding/json"
 	"encoding/xml"
 	"io"
 	"net/http"
+	"strconv"
 )
 
 // Config holds configuration values, including database connections.
-type Config struct {
-	DB *sql.DB // Database connection
+type Config struct{}
+
+// Response structure for USD/TRY exchange rate
+type USDTRYResponse struct {
+	USDTRY float64 `json:"usdTry"`
 }
 
-// Request payload structure
-type GoldPriceRequest struct {
-	CurrencyCode string `json:"currencyCode"`
-}
-
-// Response structure
-type GoldPriceResponse struct {
-	ForexBuying     string `json:"forexBuying"`
-	ForexSelling    string `json:"forexSelling"`
-	BanknoteBuying  string `json:"banknoteBuying"`
-	BanknoteSelling string `json:"banknoteSelling"`
-}
-
-// Currency XML structure
+// Currency struct represents individual currency in TCMB XML data
 type Currency struct {
-	CrossOrder      string `xml:"CrossOrder,attr"`
-	Code            string `xml:"CurrencyCode,attr"`
-	Unit            string `xml:"Unit"`
-	Name            string `xml:"Isim"`
-	ForexBuying     string `xml:"ForexBuying"`
-	ForexSelling    string `xml:"ForexSelling"`
-	BanknoteBuying  string `xml:"BanknoteBuying"`
-	BanknoteSelling string `xml:"BanknoteSelling"`
+	Code        string `xml:"CurrencyCode,attr"`
+	ForexBuying string `xml:"ForexBuying"`
 }
 
+// TCMBResponse struct for parsing TCMB XML data
 type TCMBResponse struct {
 	Currencies []Currency `xml:"Currency"`
 }
 
-// Handler function
-func (app *Config) GetGoldPricesHandler(w http.ResponseWriter, r *http.Request) {
-	if r.Method != http.MethodPost {
+// Handler function for fetching USD/TRY exchange rate
+func (app *Config) GetUSDTRYHandler(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodGet {
 		http.Error(w, "Invalid request method", http.StatusMethodNotAllowed)
 		return
 	}
 
-	// Parse JSON request body
-	var req GoldPriceRequest
-	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-		http.Error(w, "Invalid JSON input", http.StatusBadRequest)
-		return
-	}
-	defer r.Body.Close()
-
-	// Fetch data from TCMB
+	// Fetch the USD/TRY rate from TCMB (Central Bank of Turkey)
 	url := "https://www.tcmb.gov.tr/kurlar/today.xml"
 	resp, err := http.Get(url)
 	if err != nil {
@@ -71,34 +48,42 @@ func (app *Config) GetGoldPricesHandler(w http.ResponseWriter, r *http.Request) 
 		return
 	}
 
+	// Parse the TCMB XML data
+	var tcmbData TCMBResponse
 	body, err := io.ReadAll(resp.Body)
 	if err != nil {
-		http.Error(w, "Failed to read response body", http.StatusInternalServerError)
+		http.Error(w, "Failed to read TCMB response body", http.StatusInternalServerError)
 		return
 	}
 
-	// Parse XML data
-	var tcmbData TCMBResponse
 	if err := xml.Unmarshal(body, &tcmbData); err != nil {
-		http.Error(w, "Failed to parse XML", http.StatusInternalServerError)
+		http.Error(w, "Failed to parse TCMB XML", http.StatusInternalServerError)
 		return
 	}
 
-	// Find the requested currency code
+	// Find the USD/TRY exchange rate
+	var usdForexBuying float64
 	for _, currency := range tcmbData.Currencies {
-		if currency.Code == req.CurrencyCode {
-			response := GoldPriceResponse{
-				ForexBuying:     currency.ForexBuying,
-				ForexSelling:    currency.ForexSelling,
-				BanknoteBuying:  currency.BanknoteBuying,
-				BanknoteSelling: currency.BanknoteSelling,
+		if currency.Code == "USD" {
+			usdForexBuying, err = strconv.ParseFloat(currency.ForexBuying, 64)
+			if err != nil {
+				http.Error(w, "Invalid USD forex buying rate", http.StatusInternalServerError)
+				return
 			}
-			w.Header().Set("Content-Type", "application/json")
-			json.NewEncoder(w).Encode(response)
-			return
+			break
 		}
 	}
 
-	// If currency code not found
-	http.Error(w, "Currency code not found", http.StatusNotFound)
+	if usdForexBuying == 0 {
+		http.Error(w, "USD forex buying rate not found", http.StatusNotFound)
+		return
+	}
+
+	// Respond with the USD/TRY exchange rate
+	response := USDTRYResponse{
+		USDTRY: usdForexBuying,
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(response)
 }

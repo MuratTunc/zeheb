@@ -10,7 +10,7 @@ ENV_FILE := .env
 ##Clean up the built binaries.
 
 ## up_build: stops docker-compose (if running), builds all projects, checks ports, and starts docker-compose
-up_build: down clean build_buyer_service build_seller_service build_authentication_service build_tcmbratings_service
+up_build: down clean build_buyer_service build_seller_service build_authentication_service build_tcmbratings_service build_scraping_service
 	@echo "Checking if service ports are available..."
 	$(MAKE) check_ports
 	@echo "Building (when required) and starting docker images with environment variables..."
@@ -30,7 +30,7 @@ check_ports:
 		echo "Seller Service Binary: $$SELLER_SERVICE_BINARY"; \
 		echo "Authentication Service Binary: $$AUTHENTICATION_SERVICE_BINARY"; \
 		echo "TcmbRatings Service Binary: $$TCMBRATINGS_SERVICE_BINARY"; \
-		if lsof -i :$$BUYER_SERVICE_PORT || lsof -i :$$SELLER_SERVICE_PORT || lsof -i :$$AUTHENTICATION_SERVICE_PORT || lsof -i :$$TCMBRATINGS_SERVICE_PORT; then \
+		if lsof -i :$$BUYER_SERVICE_PORT || lsof -i :$$SELLER_SERVICE_PORT || lsof -i :$$AUTHENTICATION_SERVICE_PORT || lsof -i :$$TCMBRATINGS_SERVICE_PORT || lsof -i :$$SCRAPING_SERVICE_PORT; then \
 			echo "Error: One or more ports are already in use."; \
 			exit 1; \
 		else \
@@ -47,11 +47,18 @@ down:
 clean:
 	@echo "Cleaning up built binaries..."
 	@set -a; . ./$(ENV_FILE); set +a; \
-		rm -f ../buyer-service/$$BUYER_SERVICE_BINARY; \
-		rm -f ../seller-service/$$SELLER_SERVICE_BINARY; \
-		rm -f ../authentication-service/$$AUTHENTICATION_SERVICE_BINARY; \
-		rm -f ../tcmbratings-service/$$TCMBRATINGS_SERVICE_BINARY;
+		echo "BUYER_SERVICE_BINARY: $$BUYER_SERVICE_BINARY"; \
+		echo "SELLER_SERVICE_BINARY: $$SELLER_SERVICE_BINARY"; \
+		echo "AUTHENTICATION_SERVICE_BINARY: $$AUTHENTICATION_SERVICE_BINARY"; \
+		echo "TCMBRATINGS_SERVICE_BINARY: $$TCMBRATINGS_SERVICE_BINARY"; \
+		echo "SCRAPING_SERVICE_BINARY: $$SCRAPING_SERVICE_BINARY"; \
+		[ -f ../buyer-service/$$BUYER_SERVICE_BINARY ] && rm -f ../buyer-service/$$BUYER_SERVICE_BINARY || echo "File $$BUYER_SERVICE_BINARY does not exist"; \
+		[ -f ../seller-service/$$SELLER_SERVICE_BINARY ] && rm -f ../seller-service/$$SELLER_SERVICE_BINARY || echo "File $$SELLER_SERVICE_BINARY does not exist"; \
+		[ -f ../authentication-service/$$AUTHENTICATION_SERVICE_BINARY ] && rm -f ../authentication-service/$$AUTHENTICATION_SERVICE_BINARY || echo "File $$AUTHENTICATION_SERVICE_BINARY does not exist"; \
+		[ -f ../tcmbratings-service/$$TCMBRATINGS_SERVICE_BINARY ] && rm -f ../tcmbratings-service/$$TCMBRATINGS_SERVICE_BINARY || echo "File $$TCMBRATINGS_SERVICE_BINARY does not exist"; \
+		[ -f ../scraping-service/$$SCRAPING_SERVICE_BINARY ] && rm -f ../scraping-service/$$SCRAPING_SERVICE_BINARY || echo "File $$SCRAPING_SERVICE_BINARY does not exist";
 	@echo "Done!"
+
 
 ## build_buyer_service: builds the buyer-service binary as a linux executable
 build_buyer_service:
@@ -79,7 +86,14 @@ build_tcmbratings_service:
 	@echo "Building tcmbratings-service binary..."
 	@set -a; . ./$(ENV_FILE); set +a; \
 		cd ../tcmbratings-service && env CGO_ENABLED=0 GOOS=linux GOARCH=amd64 $$GOFULLPATH build -o $$TCMBRATINGS_SERVICE_BINARY ./cmd/api
-	@echo "Done!"	
+	@echo "Done!"
+
+## build_scraping_service: builds the scraping-service binary as a linux executable
+build_scraping_service:
+	@echo "Building scraping-service binary..."
+	@set -a; . ./$(ENV_FILE); set +a; \
+		cd ../scraping-service && env CGO_ENABLED=0 GOOS=linux GOARCH=amd64 $$GOFULLPATH build -o $$SCRAPING_SERVICE_BINARY ./cmd/api
+	@echo "Done!"			
 
 ## logs: shows logs from all services
 logs:

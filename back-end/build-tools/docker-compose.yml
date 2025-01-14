@@ -71,7 +71,25 @@ services:
       - .env
     deploy:
       mode: replicated
-      replicas: 1    
+      replicas: 1
+
+  scraping-service:
+    build:
+      context: ./../scraping-service
+      dockerfile: ./../scraping-service/scraping-service.dockerfile
+    image: scraping-service-img
+    container_name: ${SCRAPING_SERVICE_NAME}
+    restart: always
+    ports:
+      - "${SCRAPING_SERVICE_PORT}:${SCRAPING_SERVICE_PORT}"
+    environment:
+      - SCRAPING_SERVICE_PORT=${SCRAPING_SERVICE_PORT}
+      - SCRAPING_SERVICE_NAME=${SCRAPING_SERVICE_NAME}
+    env_file:
+      - .env
+    deploy:
+      mode: replicated
+      replicas: 1         
 
   postgres:
     image: postgres:16.6
