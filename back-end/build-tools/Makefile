@@ -1,105 +1,137 @@
 # Environment file and variables
 ENV_FILE := .env
+WAIT_TIME ?= 5  # Default wait time is 5 seconds, can be overridden
+ENVIRONMENT ?= development  # Default to development
 
-##Stop any running Docker containers.
-##Clean up any existing binaries.
-##Build the buyer and seller services.
-##Check if the necessary ports are free.
-##Rebuild and start the Docker images.
-##Fetch logs for all services.
-##Clean up the built binaries.
-
-## up_build: stops docker-compose (if running), builds all projects, checks ports, and starts docker-compose
-up_build: down clean build_buyer_service build_seller_service build_authentication_service build_tcmbratings_service build_scraping_service
-	@echo "Checking if service ports are available..."
-	$(MAKE) check_ports
-	@echo "Building (when required) and starting docker images with environment variables..."
+## build: Stops and removes all running containers, builds the project, and starts docker-compose
+build: stop_all_containers clean_volumes  check_postgres build_user_service
+	echo "🚀 Building (when required) and starting docker images with environment variables..."
 	docker-compose up --build -d
-	@echo "Docker images built and started!"
-	@echo "Fetching logs for all services..."
-	docker-compose logs --tail=50
-	@echo "Cleaning up built binaries..."
-	$(MAKE) clean
-	@echo "up_build process completed!"
+	echo "✅ Docker images built and started!"
+	$(MAKE) wait_for_services
+	echo "✅✅✅✅✅✅✅✅✅✅✅✅✅✅✅✅✅"
+	echo "📜 Fetching logs for all services..."
+	docker-compose logs --tail=20
+	echo "🚀 Running Containers:"
+	docker ps
+	echo "✅✅✅✅✅✅✅✅✅✅✅✅✅✅✅✅✅"
+	$(MAKE) wait_for_integration_test
+	$(MAKE) integration_test
 
-## check_ports: Checks if ports are available
-check_ports:
-	@echo "Checking if service ports are available..."
-	@set -a; . ./$(ENV_FILE); set +a; \
-		echo "Buyer Service Binary: $$BUYER_SERVICE_BINARY"; \
-		echo "Seller Service Binary: $$SELLER_SERVICE_BINARY"; \
-		echo "Authentication Service Binary: $$AUTHENTICATION_SERVICE_BINARY"; \
-		echo "TcmbRatings Service Binary: $$TCMBRATINGS_SERVICE_BINARY"; \
-		if lsof -i :$$BUYER_SERVICE_PORT || lsof -i :$$SELLER_SERVICE_PORT || lsof -i :$$AUTHENTICATION_SERVICE_PORT || lsof -i :$$TCMBRATINGS_SERVICE_PORT || lsof -i :$$SCRAPING_SERVICE_PORT; then \
-			echo "Error: One or more ports are already in use."; \
+## stop_all_containers: Stops and removes all running Docker containers
+stop_all_containers:
+	$(MAKE) stop_down_containers
+
+## Selectively build a specific service
+build_service:
+	@if [ -z "$(SERVICE)" ]; then \
+		echo "❌ Please provide a service name. Example: make build_service SERVICE=user-service"; \
+		exit 1; \
+	fi
+	echo "🚀 Building $(SERVICE)..."
+	docker-compose build $(SERVICE)
+	echo "✅ Done!"
+
+## Selectively build a specific database
+build_db:
+	@if [ -z "$(DB)" ]; then \
+		echo "❌ Please provide a database name. Example: make build_db DB=user-db"; \
+		exit 1; \
+	fi
+	echo "🚀 Building $(DB)..."
+	docker-compose build $(DB)
+	echo "✅ Done!"
+
+## wait_for_services: Waits for the services to initialize by showing animated dots
+wait_for_services:
+	echo -n "⏳ Waiting for $(WAIT_TIME) seconds to allow services to initialize "
+	for i in $$(seq 1 $(WAIT_TIME)); do \
+		echo -n "."; \
+		sleep 1; \
+	done
+	echo " ✅"
+
+## wait_for_integration_test: Waits before running integration tests
+wait_for_integration_test:
+	echo -n "⏳ Waiting for $(WAIT_TIME) seconds to allow services to be ready "
+	for i in $$(seq 1 $(WAIT_TIME)); do \
+		echo -n "."; \
+		sleep 1; \
+	done
+	echo " ✅"
+
+## clean_volumes: Removes all volumes (database data) to start fresh
+clean_volumes:
+	@if [ "$(ENVIRONMENT)" != "production" ]; then \
+		echo "🧹 Cleaning up all database volumes..."; \
+		docker-compose down -v; \
+		echo "✅ All volumes removed!"; \
+	else \
+		echo "⚠️ Skipping volume cleanup in production environment."; \
+	fi
+
+## stop_down_containers: Stops and removes specific or all Docker containers
+stop_down_containers:
+	@if [ -z "$(CONTAINER)" ]; then \
+		echo "🔍 Checking for running containers..."; \
+		if [ -n "$$(docker ps -q)" ]; then \
+			echo "🛑 Stopping all running Docker containers..."; \
+			docker stop $$(docker ps -q); \
+			echo "🗑️ Removing all stopped containers..."; \
+			docker rm $$(docker ps -aq); \
+			echo "✅ All containers stopped and removed."; \
+			echo "🛑 Stopping docker-compose..."; \
+			docker-compose down; \
+			echo "✅ Done!"; \
+		else \
+			echo "⚡ No running containers found. Skipping stop and remove."; \
+		fi \
+	else \
+		echo "🛑 Stopping container: $(CONTAINER)"; \
+		if docker ps --filter "name=$(CONTAINER)" --format "{{.Names}}" | grep -wq "$(CONTAINER)"; then \
+			docker stop $(CONTAINER); \
+			docker rm $(CONTAINER); \
+			echo "✅ Container $(CONTAINER) stopped and removed."; \
+		else \
+			echo "⚠️ Container $(CONTAINER) not found or already stopped."; \
+		fi \
+	fi
+
+
+check_postgres:
+	@if sudo lsof -i :5432 | grep LISTEN; then \
+		echo "PostgreSQL is running on port 5432. Stopping it..."; \
+		sudo systemctl stop postgresql; \
+		sleep 2; \
+		if sudo lsof -i :5432 | grep LISTEN; then \
+			echo "Failed to stop PostgreSQL!"; \
 			exit 1; \
 		else \
-			echo "Ports are available."; \
-		fi
+			echo "PostgreSQL stopped successfully!"; \
+		fi \
+	else \
+		echo "PostgreSQL is not running on port 5432."; \
+	fi	
 
-## down: stop docker-compose
-down:
-	@echo "Stopping docker compose..."
-	docker-compose down
-	@echo "Done!"
-
-## clean: removes built binaries
-clean:
-	@echo "Cleaning up built binaries..."
+## build_user_service: Builds the user-service binary as a Linux executable
+build_user_service:
+	echo "1- 🚀 Building user-service binary..."
 	@set -a; . ./$(ENV_FILE); set +a; \
-		echo "BUYER_SERVICE_BINARY: $$BUYER_SERVICE_BINARY"; \
-		echo "SELLER_SERVICE_BINARY: $$SELLER_SERVICE_BINARY"; \
-		echo "AUTHENTICATION_SERVICE_BINARY: $$AUTHENTICATION_SERVICE_BINARY"; \
-		echo "TCMBRATINGS_SERVICE_BINARY: $$TCMBRATINGS_SERVICE_BINARY"; \
-		echo "SCRAPING_SERVICE_BINARY: $$SCRAPING_SERVICE_BINARY"; \
-		[ -f ../buyer-service/$$BUYER_SERVICE_BINARY ] && rm -f ../buyer-service/$$BUYER_SERVICE_BINARY || echo "File $$BUYER_SERVICE_BINARY does not exist"; \
-		[ -f ../seller-service/$$SELLER_SERVICE_BINARY ] && rm -f ../seller-service/$$SELLER_SERVICE_BINARY || echo "File $$SELLER_SERVICE_BINARY does not exist"; \
-		[ -f ../authentication-service/$$AUTHENTICATION_SERVICE_BINARY ] && rm -f ../authentication-service/$$AUTHENTICATION_SERVICE_BINARY || echo "File $$AUTHENTICATION_SERVICE_BINARY does not exist"; \
-		[ -f ../tcmbratings-service/$$TCMBRATINGS_SERVICE_BINARY ] && rm -f ../tcmbratings-service/$$TCMBRATINGS_SERVICE_BINARY || echo "File $$TCMBRATINGS_SERVICE_BINARY does not exist"; \
-		[ -f ../scraping-service/$$SCRAPING_SERVICE_BINARY ] && rm -f ../scraping-service/$$SCRAPING_SERVICE_BINARY || echo "File $$SCRAPING_SERVICE_BINARY does not exist";
-	@echo "Done!"
+	cd ../user-service && $$GOFULLPATH build -o $$USER_SERVICE_BINARY ./cmd/api
+	echo "✅ Done! user-service binary..."
 
-
-## build_buyer_service: builds the buyer-service binary as a linux executable
-build_buyer_service:
-	@echo "Building buyer-service binary..."
-	@set -a; . ./$(ENV_FILE); set +a; \
-		cd ../buyer-service && env CGO_ENABLED=0 GOOS=linux GOARCH=amd64 $$GOFULLPATH build -o $$BUYER_SERVICE_BINARY ./cmd/api
-	@echo "Done!"
-
-## build_seller_service: builds the seller-service binary as a linux executable
-build_seller_service:
-	@echo "Building seller-service binary..."
-	@set -a; . ./$(ENV_FILE); set +a; \
-		cd ../seller-service && env CGO_ENABLED=0 GOOS=linux GOARCH=amd64 $$GOFULLPATH build -o $$SELLER_SERVICE_BINARY ./cmd/api
-	@echo "Done!"
-
-## build_authentication_service: builds the authentication-service binary as a linux executable
-build_authentication_service:
-	@echo "Building authentication-service binary..."
-	@set -a; . ./$(ENV_FILE); set +a; \
-		cd ../authentication-service && env CGO_ENABLED=0 GOOS=linux GOARCH=amd64 $$GOFULLPATH build -o $$AUTHENTICATION_SERVICE_BINARY ./cmd/api
-	@echo "Done!"
-
-## build_tcmbratings_service: builds the authentication-service binary as a linux executable
-build_tcmbratings_service:
-	@echo "Building tcmbratings-service binary..."
-	@set -a; . ./$(ENV_FILE); set +a; \
-		cd ../tcmbratings-service && env CGO_ENABLED=0 GOOS=linux GOARCH=amd64 $$GOFULLPATH build -o $$TCMBRATINGS_SERVICE_BINARY ./cmd/api
-	@echo "Done!"
-
-## build_scraping_service: builds the scraping-service binary as a linux executable
-build_scraping_service:
-	@echo "Building scraping-service binary..."
-	@set -a; . ./$(ENV_FILE); set +a; \
-		cd ../scraping-service && env CGO_ENABLED=0 GOOS=linux GOARCH=amd64 $$GOFULLPATH build -o $$SCRAPING_SERVICE_BINARY ./cmd/api
-	@echo "Done!"			
-
-## logs: shows logs from all services
+## logs: Shows logs from all services
 logs:
-	@echo "Fetching logs for all services..."
-	docker-compose logs -f
+	echo "📜 Fetching last 20 logs for all services..."
+	docker-compose logs --tail=20 -f
 
-## help: displays the list of available commands
+## help: Displays the list of available commands
 help:
 	@grep -E '^##' $(MAKEFILE_LIST) | sed -e 's/## //'
+
+## integration_test: Runs integration tests for all services
+integration_test:
+	echo "🔍 Running integration tests..."
+	cd ../integration_tests && \
+	./integration_user_service.sh && \
+	echo "✅ Integration tests completed successfully!"
