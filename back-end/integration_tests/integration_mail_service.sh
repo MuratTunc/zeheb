@@ -19,20 +19,15 @@ fi
 
 # Define user details
 USERNAME="testuser"
-MAILADDRESS="testuser@example.com"
-PASSWORD="TestPassword123"
-ROLE="Admin"
-
-# Define new parameters
-NEW_PASSWORD="NewTestPassword123"
-NEW_EMAIL="newmail@example.com"
-NEW_ROLE="MANAGER"
+MAILADDRESS="murat.tunc8558@gmail.com"
 
 
 # Define API URLs
 # Read port from .env file
 BASE_URL="http://localhost:$MAIL_SERVICE_PORT"
 HEALTH_CHECK_URL="$BASE_URL/health"
+SEND_AUTH_CODE_MAIL_URL="$BASE_URL/send-auth-code-mail"
+DELETE_MAIL_URL="$BASE_URL/delete"
 
 
 
@@ -69,18 +64,16 @@ health_check() {
   echo
 }
 
-# Function to check if the user exists (using the registration endpoint)
-register_user() {
-  echo "===>TEST END POINT-->REGISTER NEW USER"
+# Function to test sending an authentication code via email
+send_auth_code_mail() {
+  echo "===>TEST END POINT-->SEND AUTH CODE MAIL"
   echo
-  echo "REQUEST URL: $REGISTER_URL"
-  
+  echo "REQUEST URL: $SEND_AUTH_CODE_MAIL_URL"
+
   # Prepare the request body
   REQUEST_BODY='{
     "username": "'$USERNAME'",
-    "mailAddress": "'$MAILADDRESS'",
-    "password": "'$PASSWORD'",
-    "role": "'$ROLE'"
+    "mailAddress": "'$MAILADDRESS'"
   }'
 
   # Define the HTTP request type
@@ -88,75 +81,69 @@ register_user() {
 
   # Print the full curl command and request type
   echo "REQUEST TYPE: $REQUEST_TYPE"
-  echo "COMMAND: curl -X $REQUEST_TYPE \"$REGISTER_URL\" -H \"Content-Type: application/json\" -d '$REQUEST_BODY'"
-  
-  # Send the request and capture the response
-  REGISTER_RESPONSE=$(curl -s -w "\n%{http_code}" -X $REQUEST_TYPE "$REGISTER_URL" -H "Content-Type: application/json" -d "$REQUEST_BODY")
-  
-  
-  HTTP_BODY=$(echo "$REGISTER_RESPONSE" | sed '$ d')
-  HTTP_STATUS=$(echo "$REGISTER_RESPONSE" | tail -n1)
+  echo "COMMAND: curl -X $REQUEST_TYPE \"$SEND_AUTH_CODE_MAIL_URL\" -H \"Content-Type: application/json\" -d '$REQUEST_BODY'"
 
-  echo "Registration response: $HTTP_BODY"
+  # Send the request and capture the response
+  SEND_AUTH_CODE_MAIL_RESPONSE=$(curl -s -w "\n%{http_code}" -X $REQUEST_TYPE "$SEND_AUTH_CODE_MAIL_URL" -H "Content-Type: application/json" -d "$REQUEST_BODY")
+
+  # Extract response body and HTTP status code
+  HTTP_BODY=$(echo "$SEND_AUTH_CODE_MAIL_RESPONSE" | sed '$ d')
+  HTTP_STATUS=$(echo "$SEND_AUTH_CODE_MAIL_RESPONSE" | tail -n1)
+
+  echo "Send Auth Code Mail response: $HTTP_BODY"
   echo "HTTP Status Code: $HTTP_STATUS"
 
+  # Check if the HTTP status code is 200
   if [ "$HTTP_STATUS" -eq 200 ]; then
-    echo "User registered successfully!"
-  elif [ "$HTTP_STATUS" -eq 409 ]; then
-    echo "User already exists...Deleting this user to continue test..."
-    delete_user
+    echo "✅ Authentication code sent successfully!"
   else
-    echo "Registration failed with status code $HTTP_STATUS. Response: $HTTP_BODY"
+    echo "❌ Error: Failed to send authentication code."
     exit 1
   fi
-  
-  echo "✅ Register New User User successfully"
+
   echo
 }
 
-# Function to delete user by username
-delete_user() {
+
+# Function to delete user by username and mail address
+delete_mail() {
   echo "===>TEST END POINT-->DELETE USER"
   echo
-  echo "REQUEST URL: $DELETE_USER_URL"
+  echo "REQUEST URL: $DELETE_MAIL_URL"  # Using DELETE_MAIL_URL parameter
 
-  # Construct JSON payload dynamically
-  JSON_PAYLOAD=$(jq -n --arg username "$USERNAME" '{username: $username}')
-
-  # Print the JSON payload
-  echo "JSON BODY: $JSON_PAYLOAD"
+  # Prepare the request body with both username and mailAddress
+  REQUEST_BODY='{
+    "username": "'$USERNAME'",
+    "mailAddress": "'$MAILADDRESS'"
+  }'
 
   # Define the HTTP request type
   REQUEST_TYPE="DELETE"
 
   # Print the full curl command and request type
   echo "REQUEST TYPE: $REQUEST_TYPE"
-  echo "COMMAND: curl -X $REQUEST_TYPE \"$DELETE_USER_URL\" -H \"Authorization: Bearer $JWT_TOKEN\" -H \"Content-Type: application/json\" -d '$JSON_PAYLOAD'"
+  echo "COMMAND: curl -X $REQUEST_TYPE \"$DELETE_MAIL_URL\" -H \"Content-Type: application/json\" -d '$REQUEST_BODY'"
 
-  # Perform the DELETE request and capture both status code and response body
-  DELETE_RESPONSE=$(curl -s -w "%{http_code}" -X $REQUEST_TYPE "$DELETE_USER_URL" \
-    -H "Authorization: Bearer $JWT_TOKEN" \
-    -H "Content-Type: application/json" \
-    -d "$JSON_PAYLOAD")
+  # Send the request and capture the response
+  DELETE_RESPONSE=$(curl -s -w "\n%{http_code}" -X $REQUEST_TYPE "$DELETE_MAIL_URL" -H "Content-Type: application/json" -d "$REQUEST_BODY")
 
-  # Extract the response body and HTTP status code
-  HTTP_STATUS=$(echo "$DELETE_RESPONSE" | tail -n1)  # Extract the last line as the HTTP status code
-  HTTP_BODY=$(echo "$DELETE_RESPONSE" | sed '$ d')   # Remove the last line (HTTP status code) to get the body
+  # Extract response body and HTTP status code
+  HTTP_BODY=$(echo "$DELETE_RESPONSE" | sed '$ d')
+  HTTP_STATUS=$(echo "$DELETE_RESPONSE" | tail -n1)
 
-  # Print the response
   echo "Delete response: $HTTP_BODY"
   echo "HTTP Status Code: $HTTP_STATUS"
 
-  # Check if the HTTP status code is 200
-  if [ "$HTTP_STATUS" -ne 200 ]; then
-    echo "❌ Error: User deletion failed."
+  if [ "$HTTP_STATUS" -eq 200 ]; then
+    echo "User deleted successfully!"
+  else
+    echo "❌ User deletion failed with status code $HTTP_STATUS. Response: $HTTP_BODY"
     exit 1
   fi
 
   echo "✅ User deleted successfully."
   echo
 }
-
 
 
 show_database_table(){
@@ -180,6 +167,7 @@ show_database_table(){
 
 health_check
 
+send_auth_code_mail
 
 show_database_table
 

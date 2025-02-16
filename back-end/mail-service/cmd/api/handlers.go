@@ -2,6 +2,7 @@ package main
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 	"log"
 	"math/rand"
@@ -9,6 +10,8 @@ import (
 	"net/smtp"
 	"os"
 	"time"
+
+	"gorm.io/gorm"
 )
 
 // Constants for error and success messages
@@ -17,7 +20,9 @@ const (
 	ErrInsertingUser      = "Error inserting user"
 	ErrUserNotFound       = "User not found"
 	ErrSendingEmail       = "Failed to send email"
+	ErrUpdatingUser       = " Failed to write new generated auth-code to same username and mailaddress"
 	UserCreatedSuccess    = "User created successfully"
+	ErrDatabase           = "Undifend DTABASE Error"
 	AuthCodeSuccess       = "Authentication code generated and sent successfully!"
 )
 
@@ -34,6 +39,26 @@ type AuthCodeRequest struct {
 	MailAddress string `json:"mailAddress"`
 }
 
+// HealthCheckHandler checks if the database is available
+func (app *Config) HealthCheckHandler(w http.ResponseWriter, r *http.Request) {
+	sqlDB, err := app.DB.DB() // Get *sql.DB from *gorm.DB
+	if err != nil {
+		http.Error(w, "Failed to get database instance", http.StatusInternalServerError)
+		return
+	}
+
+	// Check database connectivity
+	err = sqlDB.Ping()
+	if err != nil {
+		http.Error(w, "Database connection failed", http.StatusInternalServerError)
+		return
+	}
+
+	// If the DB is healthy, return a success response
+	w.WriteHeader(http.StatusOK)
+	w.Write([]byte("OK"))
+}
+
 // SendMail sends an authentication code to the user's email address
 func SendMail(to string, authCode string) error {
 	// SMTP server configuration
@@ -41,8 +66,8 @@ func SendMail(to string, authCode string) error {
 	smtpPort := "587"            // TLS port
 
 	// Sender credentials (Use environment variables for security)
-	senderEmail := os.Getenv("SMTP_EMAIL")       // Your email address
-	senderPassword := os.Getenv("SMTP_PASSWORD") // Your email app password
+	senderEmail := os.Getenv("MAIL_SERVICE_SMTP_EMAIL")       // Your email address
+	senderPassword := os.Getenv("MAIL_SERVICE_SMTP_PASSWORD") // Your email app password
 
 	// Email message body
 	subject := "Subject: Your Authentication Code\n"
@@ -76,49 +101,79 @@ func (app *Config) GenerateAndSendAuthCode(w http.ResponseWriter, r *http.Reques
 	// Generate a random 6-digit code
 	authCode := GenerateAuthCode()
 
-	// Save to database
-	user := User{
-		Username:    req.Username,
-		MailAddress: req.MailAddress,
-		AuthCode:    authCode,
-	}
+	// Check if user already exists
+	var existingUser User
+	err := app.DB.Where("username = ? AND mail_address = ?", req.Username, req.MailAddress).First(&existingUser).Error
 
-	if err := app.DB.Create(&user).Error; err != nil {
+	if err == nil {
+		// User exists -> Update auth_code
+		existingUser.AuthCode = authCode
+		if err := app.DB.Save(&existingUser).Error; err != nil {
+			log.Printf("❌ Database error while updating auth_code: %v", err)
+			http.Error(w, ErrUpdatingUser, http.StatusInternalServerError)
+			return
+		}
+	} else if errors.Is(err, gorm.ErrRecordNotFound) {
+		// User does not exist -> Create a new record
+		newUser := User{
+			Username:    req.Username,
+			MailAddress: req.MailAddress,
+			AuthCode:    authCode,
+		}
+		if err := app.DB.Create(&newUser).Error; err != nil {
+			log.Printf("❌ Database error while inserting new user: %v", err)
+			http.Error(w, ErrInsertingUser, http.StatusInternalServerError)
+			return
+		}
+	} else {
+		// Other DB error
 		log.Printf("❌ Database error: %v", err)
-		http.Error(w, ErrInsertingUser, http.StatusInternalServerError)
+		http.Error(w, ErrDatabase, http.StatusInternalServerError)
 		return
 	}
 
 	// Send the authentication code via email
-	err := SendMail(req.MailAddress, authCode)
-	if err != nil {
+	if err := SendMail(req.MailAddress, authCode); err != nil {
 		http.Error(w, ErrSendingEmail, http.StatusInternalServerError)
 		return
 	}
 
-	// Respond with success
+	// Respond with success and return the auth code
 	w.WriteHeader(http.StatusOK)
 	json.NewEncoder(w).Encode(map[string]string{
-		"message": AuthCodeSuccess,
+		"message":  AuthCodeSuccess,
+		"authCode": authCode, // Returning auth code in the response
 	})
 }
 
-// HealthCheckHandler checks if the database is available
-func (app *Config) HealthCheckHandler(w http.ResponseWriter, r *http.Request) {
-	sqlDB, err := app.DB.DB() // Get *sql.DB from *gorm.DB
-	if err != nil {
-		http.Error(w, "Failed to get database instance", http.StatusInternalServerError)
+// DeleteMailHandler handles the deletion of a user by username and mail address
+func (app *Config) DeleteMailHandler(w http.ResponseWriter, r *http.Request) {
+	var req AuthCodeRequest // Use the AuthCodeRequest struct
+
+	// Parse the request body
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		http.Error(w, ErrInvalidRequestBody, http.StatusBadRequest)
 		return
 	}
 
-	// Check database connectivity
-	err = sqlDB.Ping()
-	if err != nil {
-		http.Error(w, "Database connection failed", http.StatusInternalServerError)
+	// Search for the user in the database using the provided username and mail address
+	var user User
+	if err := app.DB.Where("username = ? AND mail_address = ?", req.Username, req.MailAddress).First(&user).Error; err != nil {
+		if err == gorm.ErrRecordNotFound {
+			http.Error(w, ErrUserNotFound, http.StatusNotFound)
+		} else {
+			http.Error(w, "Failed to query the database", http.StatusInternalServerError)
+		}
 		return
 	}
 
-	// If the DB is healthy, return a success response
+	// Delete the user from the database
+	if err := app.DB.Delete(&user).Error; err != nil {
+		http.Error(w, "Failed to delete user", http.StatusInternalServerError)
+		return
+	}
+
+	// Respond with a success message
 	w.WriteHeader(http.StatusOK)
-	w.Write([]byte("OK"))
+	w.Write([]byte("User deleted successfully"))
 }

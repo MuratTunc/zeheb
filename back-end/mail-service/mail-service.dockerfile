@@ -14,7 +14,7 @@ RUN go mod download
 COPY cmd/api /app/cmd/api
 
 # Build the Go application as a static binary
-RUN go build -o userServiceApp ./cmd/api
+RUN go build -o mailServiceApp ./cmd/api
 
 # Final lightweight image
 FROM alpine:latest
