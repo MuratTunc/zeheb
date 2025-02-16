@@ -4,7 +4,7 @@ WAIT_TIME ?= 5  # Default wait time is 5 seconds, can be overridden
 ENVIRONMENT ?= development  # Default to development
 
 ## build: Stops and removes all running containers, builds the project, and starts docker-compose
-build: stop_all_containers clean_volumes  check_postgres build_user_service
+build: stop_all_containers clean_volumes  check_postgres build_user_service build_mail_service
 	echo "🚀 Building (when required) and starting docker images with environment variables..."
 	docker-compose up --build -d
 	echo "✅ Docker images built and started!"
@@ -120,6 +120,14 @@ build_user_service:
 	cd ../user-service && $$GOFULLPATH build -o $$USER_SERVICE_BINARY ./cmd/api
 	echo "✅ Done! user-service binary..."
 
+## build_mail_service: Builds the user-service binary as a Linux executable
+build_mail_service:
+	echo "1- 🚀 Building mail-service binary..."
+	@set -a; . ./$(ENV_FILE); set +a; \
+	cd ../mail-service && $$GOFULLPATH build -o $$MAIL_SERVICE_BINARY ./cmd/api
+	echo "✅ Done! mail-service binary..."
+
+
 ## logs: Shows logs from all services
 logs:
 	echo "📜 Fetching last 20 logs for all services..."
@@ -134,4 +142,5 @@ integration_test:
 	echo "🔍 Running integration tests..."
 	cd ../integration_tests && \
 	./integration_user_service.sh && \
+	./integration_mail_service.sh && \
 	echo "✅ Integration tests completed successfully!"
