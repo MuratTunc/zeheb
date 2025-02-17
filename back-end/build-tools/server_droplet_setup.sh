@@ -10,13 +10,16 @@ else
 fi
 
 # Variables from .env file
-SERVER_IP="${SERVER_IP}"  # Loaded from .env
-NEW_USER="${NEW_USER}"    # Loaded from .env
-REPO_GIT_SSH_LINK="${REPO_GIT_SSH_LINK}"  # Loaded from .env GitHub repository SSH link
+SERVER_IP="${SERVER_IP}"  
+NEW_USER="${NEW_USER}"    
+DOMAIN_NAME="${DOMAIN_NAME}"  
+REPO_GIT_SSH_LINK="${REPO_GIT_SSH_LINK}"
+
 SERVER_USER="root"                    # Assuming root user
 PRIVATE_KEY_PATH="$HOME/.ssh/id_rsa"  # Path to private SSH key on local machine
 SERVER_REPO_DIR="/home/$NEW_USER/zeheb"  # Dynamically set the repository directory based on NEW_USER
 SERVER_BULID_TOOLS_DIR="/home/$NEW_USER/zeheb/back-end/build-tools"  # Directory for the install script
+
 LOCAL_ENV_FILE="$(dirname "$0")/.env"  # Path to the .env file (same directory as this script)
 
 # Color definitions
@@ -26,12 +29,12 @@ RESET="\033[0m"
 
 # Function to display success messages
 success() {
-  echo -e "${GREEN}$1${RESET}"
+  echo -e "✅ ${GREEN}$1${RESET}"
 }
 
 # Function to display error messages
 error() {
-  echo -e "${RED}$1${RESET}"
+  echo -e "❌ ${RED}$1${RESET}"
 }
 
 # Function to set up the new user
@@ -167,7 +170,7 @@ make_back_end_services() {
     echo "Stopping existing services with 'make down'..."
     sudo make down
     echo "Building and starting services with 'make up_build'..."
-    sudo make up_build
+    sudo make -s build
 EOF
 
   if [ $? -eq 0 ]; then
@@ -179,7 +182,7 @@ EOF
 }
 
 # Function to  build web-app react apps and copy build files to derver droplet
-build_web_app() {
+build_web_app_in_local_pc() {
     success "Building React web application locally..."
     LOCAL_WEB_APP_DIR="/home/mutu/projects/zeheb/web-app"
     
@@ -254,6 +257,7 @@ clone_repository
 transfer_envfile
 install
 make_back_end_services
-build_web_app
+build_web_app_in_local_pc
 nginx_site_available
 success "All tasks completed successfully!"
+echo "✅✅✅✅✅✅✅✅✅✅✅✅✅✅✅✅✅"

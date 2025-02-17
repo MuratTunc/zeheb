@@ -20,7 +20,7 @@ const (
 	ErrInsertingUser      = "Error inserting user"
 	ErrUserNotFound       = "User not found"
 	ErrSendingEmail       = "Failed to send email"
-	ErrUpdatingUser       = " Failed to write new generated auth-code to same username and mailaddress"
+	ErrUpdatingUser       = "Failed to write new generated auth-code to same username and mailaddress"
 	UserCreatedSuccess    = "User created successfully"
 	ErrDatabase           = "Undifend DTABASE Error"
 	AuthCodeSuccess       = "Authentication code generated and sent successfully!"

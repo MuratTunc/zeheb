@@ -27,7 +27,7 @@ MAILADDRESS="murat.tunc8558@gmail.com"
 BASE_URL="http://localhost:$MAIL_SERVICE_PORT"
 HEALTH_CHECK_URL="$BASE_URL/health"
 SEND_AUTH_CODE_MAIL_URL="$BASE_URL/send-auth-code-mail"
-DELETE_MAIL_URL="$BASE_URL/delete"
+DELETE_MAIL_URL="$BASE_URL/delete-mail"
 
 
 
@@ -167,8 +167,8 @@ show_database_table(){
 
 health_check
 
-send_auth_code_mail
-
+#send_auth_code_mail
+delete_mail
 show_database_table
 
 # Final message

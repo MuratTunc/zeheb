@@ -1,5 +1,13 @@
 # Product-Price Inquiry System
 
+zehebfind.com → React UI
+
+Frontend Request: https://zehebfind.com/user/login
+NGINX: Forwards to http://user-service:8080/login ✅
+
+Frontend Request: https://zehebfind.com/mail/send
+NGINX: Forwards to http://mail-service:8081/send ✅
+
 ## Flow Explanation
 
 ### 1. Buyer App Sends Request to Buyer Service
