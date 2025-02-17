@@ -8,7 +8,7 @@ build: stop_all_containers clean_volumes check_postgres build_user_service build
 	
 	# Load the environment variables from the .env file using bash
 	@echo "Loading environment variables from .env..."
-	@set -a && . .env && set +a && echo "ENV FILE LOADED!"
+	@bash -c 'set -a && . .env && set +a' && echo "ENV FILE LOADED!"
 	
 	# Print out the loaded environment variables
 	echo "USER_SERVICE_PORT is $(USER_SERVICE_PORT)"
