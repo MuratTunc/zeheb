@@ -39,6 +39,7 @@ else
   print_success "netstat is already installed."
 fi
 
+: <<'EOF'
 # Install npm if not already installed
 if ! command -v npm &>/dev/null; then
   echo "npm not found, installing Node.js and npm..."
@@ -50,6 +51,7 @@ if ! command -v npm &>/dev/null; then
 else
   print_success "npm is already installed."
 fi
+EOF
 
 # Update system packages
 echo "Updating package list..."
