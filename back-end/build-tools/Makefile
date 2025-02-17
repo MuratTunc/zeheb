@@ -5,6 +5,10 @@ ENVIRONMENT ?= development  # Default to development
 
 ## build: Stops and removes all running containers, builds the project, and starts docker-compose
 build: stop_all_containers clean_volumes  check_postgres build_user_service build_mail_service
+	echo "USER_SERVICE_PORT is $(USER_SERVICE_PORT)"
+	echo "USER_SERVICE_NAME is $(USER_SERVICE_NAME)"
+	echo "MAIL_SERVICE_PORT is $(MAIL_SERVICE_PORT)"
+	source .env && echo "ENV FILE LOADED!"
 	echo "🚀 Building (when required) and starting docker images with environment variables..."
 	docker-compose up --build -d
 	echo "✅ Docker images built and started!"
