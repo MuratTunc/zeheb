@@ -6,8 +6,9 @@ ENVIRONMENT ?= development  # Default to development
 ## build: Stops and removes all running containers, builds the project, and starts docker-compose
 build: stop_all_containers clean_volumes check_postgres build_user_service build_mail_service
 	
-	# Load the environment variables from the .env file
-	. .env && echo "ENV FILE LOADED!"
+	# Load the environment variables from the .env file using bash
+	echo "Loading environment variables from .env..."
+	export $(shell cat .env | sed 's/#.*//g' | xargs) && echo "ENV FILE LOADED!"
 	
 	# Print out the loaded environment variables
 	echo "USER_SERVICE_PORT is $(USER_SERVICE_PORT)"
