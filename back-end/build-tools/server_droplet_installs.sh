@@ -136,7 +136,7 @@ fi
 # Install required packages
 install_package curl curl
 install_package netstat net-tools
-install_package npm "nodejs npm"
+#install_package npm "nodejs npm"
 install_package nginx nginx
 install_package certbot "certbot python3-certbot-nginx"
 install_package make make
