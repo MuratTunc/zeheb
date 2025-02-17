@@ -5,8 +5,8 @@ GREEN='\033[0;32m'
 RED='\033[0;31m'
 NC='\033[0m' # No Color
 
-print_success() { echo -e "✅ ${GREEN}$1${NC}"; }
-print_error() { echo -e "❌ ${RED}$1${NC}"; }
+print_success() { echo -e "✅✅✅ ${GREEN}$1${NC}"; }
+print_error() { echo -e "❌❌❌ ${RED}$1${NC}"; }
 
 # Ensure script runs as root
 if [ "$(id -u)" -ne 0 ]; then
@@ -149,4 +149,7 @@ setup_go_environment
 check_docker_containers
 check_nginx_ports
 
-print_success "<-- Setup completed successfully -->"
+
+print_success "*************************************************"
+print_success "**********SET UP SUCCESSFULLY COMPLETED**********"
+print_success "*************************************************"
