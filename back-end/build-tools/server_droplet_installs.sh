@@ -156,14 +156,6 @@ else
   exit 1
 fi
 
-# Display running Docker containers
-echo "Checking running Docker containers..."
-if docker ps -q | grep -q .; then
-  print_success "The following Docker containers are running:"
-  docker ps --format "table {{.ID}}\t{{.Names}}\t{{.Status}}\t{{.Ports}}"
-else
-  print_error "No Docker containers are currently running."
-fi
 
 # Display Nginx active ports
 echo "Checking Nginx active ports..."

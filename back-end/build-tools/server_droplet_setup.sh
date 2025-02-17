@@ -167,9 +167,7 @@ make_back_end_services() {
   ssh "$NEW_USER@$SERVER_IP" << EOF
     set -e
     cd "$SERVER_BULID_TOOLS_DIR"
-    echo "Stopping existing services with 'make down'..."
-    sudo make down
-    echo "Building and starting services with 'make up_build'..."
+    echo "🔥 Building Services..."
     sudo make -s build
 EOF
 
