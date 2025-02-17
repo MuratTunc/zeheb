@@ -113,11 +113,16 @@ clone_repository() {
   ssh "$NEW_USER@$SERVER_IP" << EOF
     set -e
     ssh-keyscan github.com >> ~/.ssh/known_hosts
+    
+    # Ensure the directory exists
     mkdir -p "$SERVER_REPO_DIR"
     cd "$SERVER_REPO_DIR"
+    
+    # Check if the repository exists and delete it if needed
     if [ -d ".git" ]; then
-      echo "Repository already exists. Pulling latest changes..."
-      git pull
+      echo "Repository exists. Deleting old repository and cloning again..."
+      rm -rf "$SERVER_REPO_DIR"/*
+      git clone "$REPO_GIT_SSH_LINK" .
     else
       echo "Cloning the repository into $SERVER_REPO_DIR..."
       git clone "$REPO_GIT_SSH_LINK" .

@@ -4,23 +4,36 @@ WAIT_TIME ?= 5  # Default wait time is 5 seconds, can be overridden
 ENVIRONMENT ?= development  # Default to development
 
 ## build: Stops and removes all running containers, builds the project, and starts docker-compose
-build: stop_all_containers clean_volumes  check_postgres build_user_service build_mail_service
+build: stop_all_containers clean_volumes check_postgres build_user_service build_mail_service
+	
+	# Load the environment variables from the .env file
+	. .env && echo "ENV FILE LOADED!"
+	
+	# Print out the loaded environment variables
 	echo "USER_SERVICE_PORT is $(USER_SERVICE_PORT)"
 	echo "USER_SERVICE_NAME is $(USER_SERVICE_NAME)"
 	echo "MAIL_SERVICE_PORT is $(MAIL_SERVICE_PORT)"
-	source .env && echo "ENV FILE LOADED!"
+	
+	# Build and start docker containers
 	echo "🚀 Building (when required) and starting docker images with environment variables..."
 	docker-compose up --build -d
 	echo "✅ Docker images built and started!"
+	
+	# Wait for services to be ready
 	$(MAKE) wait_for_services
-	echo "✅✅✅✅✅✅✅✅✅✅✅✅✅✅✅✅✅"
+	
+	# Fetch logs for all services
 	echo "📜 Fetching logs for all services..."
 	docker-compose logs --tail=20
+	
+	# List running containers
 	echo "🚀 Running Containers:"
 	docker ps
-	echo "✅✅✅✅✅✅✅✅✅✅✅✅✅✅✅✅✅"
+	
+	# Run integration tests
 	$(MAKE) wait_for_integration_test
 	$(MAKE) integration_test
+
 
 ## stop_all_containers: Stops and removes all running Docker containers
 stop_all_containers:
