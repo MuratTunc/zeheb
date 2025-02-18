@@ -3,7 +3,7 @@ server {
     server_name zehebfind.com www.zehebfind.com;
 
     location / {
-        root /var/www/html;
+        root /usr/share/nginx/html;  # ✅ Correct path for Nginx in Docker
         index index.html index.htm;
         try_files $uri /index.html;
     }
