@@ -18,7 +18,11 @@ build: stop_all_containers clean_volumes check_postgres build_user_service build
 	echo "🚀 Running Containers:" && \
 	docker ps && \
 	$(MAKE) wait_for_integration_test && \
-	$(MAKE) integration_test
+	$(MAKE) integration_test && \
+	echo "🔄 Restarting Nginx..." && \
+	sudo systemctl restart nginx && \
+	echo "✅ Nginx restarted!"
+
 
 
 

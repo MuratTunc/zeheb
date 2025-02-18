@@ -81,7 +81,7 @@ services:
     ports:
       - "8080:80"
     volumes:
-      - ./nginx.conf:/etc/nginx/nginx.conf:ro
+      - /etc/nginx/sites-available/zehebfind:/etc/nginx/conf.d/zehebfind.conf:ro
       - ./../frontend/build:/usr/share/nginx/html
     depends_on:
       - user-service
