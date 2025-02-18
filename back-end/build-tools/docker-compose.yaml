@@ -14,10 +14,6 @@ services:
         condition: service_healthy
     env_file:
       - .env
-    environment:
-      - USER_SERVICE_PORT=${USER_SERVICE_PORT}
-      - USER_SERVICE_NAME=${USER_SERVICE_NAME}
-      - USER_SERVICE_JWT_SECRET=${USER_SERVICE_JWT_SECRET}  # Adding JWT Secret here
     networks:
       - app-network
 
