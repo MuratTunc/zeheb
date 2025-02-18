@@ -120,38 +120,16 @@ check_postgres:
 ## build_user_service: Builds the user-service binary as a Linux executable
 build_user_service:
 	echo "1- 🚀 Building user-service binary..."
-	set -a; \
-	if [ -f .env ]; then \
-		# Export only valid key-value pairs from the .env file (ignore lines starting with #) 
-		export $$(grep -v '^#' .env | sed 's/[^a-zA-Z0-9_]/_/g' | xargs); \
-	else \
-		echo "⚠️ .env file not found!"; \
-		exit 1; \
-	fi; \
-	set +a; \
-	set -x; \
-	cd ../user-service && "$$GOFULLPATH" build -o "$$USER_SERVICE_BINARY" ./cmd/api
-	set +x;
+	@set -a; . ./$(ENV_FILE); set +a; \
+	cd ../user-service && $$GOFULLPATH build -o $$USER_SERVICE_BINARY ./cmd/api
 	echo "✅ Done! user-service binary..."
 
-
-
-## build_mail_service: Builds the mail-service binary as a Linux executable
+## build_mail_service: Builds the user-service binary as a Linux executable
 build_mail_service:
 	echo "1- 🚀 Building mail-service binary..."
-	set -a; \
-	if [ -f .env ]; then \
-		export $$(grep -v '^#' .env | xargs); \
-	else \
-		echo "⚠️ .env file not found!"; \
-		exit 1; \
-	fi; \
-	set +a; \
-	set -x; \
-	cd ../mail-service && "$$GOFULLPATH" build -o "$$MAIL_SERVICE_BINARY" ./cmd/api
-	set +x;
+	@set -a; . ./$(ENV_FILE); set +a; \
+	cd ../mail-service && $$GOFULLPATH build -o $$MAIL_SERVICE_BINARY ./cmd/api
 	echo "✅ Done! mail-service binary..."
-
 
 
 ## logs: Shows logs from all services
