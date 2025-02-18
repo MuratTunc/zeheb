@@ -128,6 +128,9 @@ clone_repository() {
 
     echo "Cloning the repository..."
     git clone "$REPO_GIT_SSH_LINK" .
+
+    # Change ownership to the appropriate user after cloning
+    sudo chown -R mutu:mutu "$SERVER_REPO_DIR"
 EOF
 
   if [ $? -eq 0 ]; then
