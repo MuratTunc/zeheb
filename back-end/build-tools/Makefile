@@ -135,6 +135,7 @@ build_user_service:
 	echo "✅ Done! user-service binary..."
 
 
+
 ## build_mail_service: Builds the mail-service binary as a Linux executable
 build_mail_service:
 	echo "1- 🚀 Building mail-service binary..."
