@@ -17,6 +17,12 @@ then
   sudo apt-get install -y jq
 fi
 
+
+echo -e "********************************************************************"
+echo -e "✅✅✅ $MAIL_SERVICE_NAME API END POINT INTEGRATION TESTS STARTS..."
+echo -e "********************************************************************"
+
+
 # Define user details
 USERNAME="testuser"
 MAILADDRESS="murat.tunc8558@gmail.com"
@@ -167,8 +173,10 @@ show_database_table(){
 
 health_check
 
-#send_auth_code_mail
+send_auth_code_mail
+
 delete_mail
+
 show_database_table
 
 # Final message

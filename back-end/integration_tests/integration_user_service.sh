@@ -1,5 +1,7 @@
 #!/bin/bash
 
+
+
 # Load environment variables from .env file
 ENV_FILE="../build-tools/.env"
 if [ -f "$ENV_FILE" ]; then
@@ -16,6 +18,10 @@ then
   sudo apt-get update
   sudo apt-get install -y jq
 fi
+
+echo -e "********************************************************************"
+echo -e "✅✅✅ $USER_SERVICE_NAME API END POINT INTEGRATION TESTS STARTS..."
+echo -e "********************************************************************"
 
 # Define user details
 USERNAME="testuser"
@@ -484,7 +490,6 @@ update_role() {
 }
 
 
-
 # Function to delete user by username
 delete_user() {
   echo "===>TEST END POINT-->DELETE USER"
@@ -529,7 +534,6 @@ delete_user() {
 }
 
 
-
 show_database_table(){
   
   # Get the container ID using the container name
@@ -560,21 +564,17 @@ show_database_table
 deactivate_user
 show_database_table
 
-
 activate_user
 show_database_table
 
-
 update_email
 show_database_table
-
 
 update_password
 show_database_table
 
 update_role
 show_database_table
-
 
 update_user
 show_database_table
