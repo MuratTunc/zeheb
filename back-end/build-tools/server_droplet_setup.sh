@@ -25,7 +25,13 @@ LOCAL_ENV_FILE="$(dirname "$0")/.env"  # Path to the .env file (same directory a
 # Color definitions
 RED="\033[0;31m"
 GREEN="\033[0;32m"
+YELLOW="\033[0;33m"
 RESET="\033[0m"
+
+# Function to display success messages
+start() {
+  echo -e "🔄🔄🔄 ${YELLOW}$1${RESET}"
+}
 
 # Function to display success messages
 success() {
@@ -39,7 +45,7 @@ error() {
 
 # Function to set up the new user
 setup_new_user() {
-  success "Setting up the new user:'$NEW_USER' on the server..."
+  start "Setting up the new user:'$NEW_USER' on the server..."
   ssh "$SERVER_USER@$SERVER_IP" << EOF
     set -e  # Exit immediately if any command fails
 
@@ -84,7 +90,7 @@ EOF
 
 # Function to configure the private SSH key for the new user
 configure_private_ssh_key() {
-  success "Copying the private SSH key to the server for user '$NEW_USER'..."
+  start "Copying the private SSH key to the server for user '$NEW_USER'..."
   scp "$PRIVATE_KEY_PATH" "$NEW_USER@$SERVER_IP:/home/$NEW_USER/.ssh/id_rsa"
   if [ $? -eq 0 ]; then
     success "Private SSH key copied successfully!"
@@ -109,7 +115,7 @@ EOF
 
 # Function to clone the repository on the server
 clone_repository() {
-  success "Cloning the GitHub repository on the server droplet..."
+  start "Cloning the GitHub repository on the server droplet..."
   ssh "$NEW_USER@$SERVER_IP" << EOF
     set -e
     ssh-keyscan github.com >> ~/.ssh/known_hosts
@@ -143,7 +149,7 @@ EOF
 
 # Function to copy .env file to the server
 transfer_envfile() {
-  success "Copying the .env file to the server..."
+  start "Copying the .env file to the server..."
   scp "$LOCAL_ENV_FILE" "$NEW_USER@$SERVER_IP:$SERVER_BULID_TOOLS_DIR/.env"
   if [ $? -eq 0 ]; then
     success ".env file copied successfully to $SERVER_BULID_TOOLS_DIR."
@@ -155,7 +161,7 @@ transfer_envfile() {
 
 # Function to run the server installation script
 install() {
-  success "Running server_droplet_installs.sh..."
+  start "Running server_droplet_installs.sh..."
   ssh "$NEW_USER@$SERVER_IP" << EOF
     set -e
     cd "$SERVER_BULID_TOOLS_DIR"
@@ -172,7 +178,7 @@ EOF
 
 # Function to run "make" commands for back-end services
 make_back_end_services() {
-  success "Running 'make' commands for back-end services..."
+  start "Running 'make' commands for back-end services..."
   ssh "$NEW_USER@$SERVER_IP" << EOF
     set -e  # Exit immediately if a command fails
     set -x  # Print each command before executing (debug mode)
@@ -191,7 +197,7 @@ EOF
 
 # Function to  build web-app react apps and copy build files to derver droplet
 build_web_app_in_local_pc() {
-    success "Building React web application locally..."
+    start "Building React web application locally..."
     LOCAL_WEB_APP_DIR="/home/mutu/projects/zeheb/web-app"
     
     # Step 1: Check and build the React app
@@ -225,34 +231,30 @@ EOF
 }
 
 # Function to configure Nginx on the server
-nginx_site_available() {
-  success "Configuring Nginx on the server..."
+nginx_file_transfer() {
+  start "Transfer Nginx conf file to server droplet..."
 
   # SSH into the server and set up Nginx
   ssh "$NEW_USER@$SERVER_IP" << EOF
     set -e
 
-    # Copy the Nginx configuration file from the cloned repository to the correct location
-    sudo cp $SERVER_BULID_TOOLS_DIR/$DOMAIN_NAME /etc/nginx/sites-available/$DOMAIN_NAME
-
-    # Enable the Nginx site
-    sudo ln -sf /etc/nginx/sites-available/$DOMAIN_NAME /etc/nginx/sites-enabled/
-
-    # Test Nginx configuration and reload if successful
-    if sudo nginx -t; then
-      sudo systemctl reload nginx
-      sudo chown -R www-data:www-data /var/www/html/build
-      sudo chmod -R 755 /var/www/html/build
+    # Check if /etc/nginx/sites-available exists, if not, create it
+    if [ ! -d "/etc/nginx/sites-available" ]; then
+      sudo mkdir -p /etc/nginx/sites-available
+      success "Created /etc/nginx/sites-available directory."
     else
-      error "Nginx configuration test failed."
-      exit 1
+      success "/etc/nginx/sites-available already exists."
     fi
+
+    # Transfer the Nginx configuration file
+    scp "./$DOMAIN_NAME.conf" "$NEW_USER@$SERVER_IP:/etc/nginx/sites-available/$DOMAIN_NAME.conf"
+
 EOF
 
   if [ $? -eq 0 ]; then
-    success "Nginx configured and reloaded successfully!"
+    success "Nginx configuration transferred successfully!"
   else
-    error "Failed to configure Nginx."
+    error "Failed to transfer Nginx configuration."
     exit 1
   fi
 }
@@ -266,6 +268,6 @@ transfer_envfile
 install
 make_back_end_services
 build_web_app_in_local_pc
-nginx_site_available
+nginx_file_transfer
 success "All tasks completed successfully!"
 echo "✅✅✅✅✅✅✅✅✅✅✅✅✅✅✅✅✅"

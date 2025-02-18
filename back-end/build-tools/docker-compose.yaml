@@ -88,16 +88,20 @@ services:
     ports:
       - "${NGINX_SERVICE_PORT}:80"
     volumes:
-      - /etc/nginx/sites-available/zehebfind:/etc/nginx/conf.d/zehebfind.conf:ro
-      - ./../frontend/build:/usr/share/nginx/html
+      - ./nginx/zehebfind.conf:/etc/nginx/conf.d/zehebfind.conf:ro  # Mount the config file here
+      - ./../frontend/build:/usr/share/nginx/html  # Ensure frontend build folder exists
     depends_on:
       - user-service
       - mail-service
     env_file:
-      - .env  
+      - .env
     networks:
       - app-network
-
+    healthcheck:
+      test: ["CMD", "curl", "--silent", "--fail", "http://localhost"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
 
 networks:
   app-network:
