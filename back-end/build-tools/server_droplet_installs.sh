@@ -7,10 +7,12 @@ NC='\033[0m' # No Color
 YELLOW="\033[0;33m"
 RESET="\033[0m"
 
-# Function to display success messages
+# Function to display start messages
 start() {
+  echo -e "🔄🔄🔄 *****************************🔄🔄🔄 ${YELLOW}$1${RESET}"
   echo -e "🔄🔄🔄 ${YELLOW}$1${RESET}"
 }
+
 
 print_success() { echo -e "✅✅✅ ${GREEN}$1${NC}"; }
 print_error() { echo -e "❌❌❌ ${RED}$1${NC}"; }

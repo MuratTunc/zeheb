@@ -28,8 +28,9 @@ GREEN="\033[0;32m"
 YELLOW="\033[0;33m"
 RESET="\033[0m"
 
-# Function to display success messages
+# Function to display start messages
 start() {
+  echo -e "🔄🔄🔄 *****************************🔄🔄🔄 ${YELLOW}$1${RESET}"
   echo -e "🔄🔄🔄 ${YELLOW}$1${RESET}"
 }
 
@@ -241,9 +242,9 @@ nginx_file_transfer() {
     # Check if /etc/nginx/sites-available exists, if not, create it
     if [ ! -d "/etc/nginx/sites-available" ]; then
       sudo mkdir -p /etc/nginx/sites-available
-      success "Created /etc/nginx/sites-available directory."
+      echo "Created /etc/nginx/sites-available directory."
     else
-      success "/etc/nginx/sites-available already exists."
+      echo "/etc/nginx/sites-available already exists."
     fi
 
     # Transfer the Nginx configuration file
