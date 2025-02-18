@@ -122,7 +122,8 @@ build_user_service:
 	echo "1- 🚀 Building user-service binary..."
 	set -a; \
 	if [ -f .env ]; then \
-		export $$(grep -v '^#' .env | xargs); \
+		# Export only valid key-value pairs from the .env file (ignore lines starting with #) 
+		export $$(grep -v '^#' .env | sed 's/[^a-zA-Z0-9_]/_/g' | xargs); \
 	else \
 		echo "⚠️ .env file not found!"; \
 		exit 1; \
