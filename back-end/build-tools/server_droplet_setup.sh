@@ -29,12 +29,12 @@ RESET="\033[0m"
 
 # Function to display success messages
 success() {
-  echo -e "✅ ${GREEN}$1${RESET}"
+  echo -e "✅✅✅ ${GREEN}$1${RESET}"
 }
 
 # Function to display error messages
 error() {
-  echo -e "❌ ${RED}$1${RESET}"
+  echo -e "❌❌❌ ${RED}$1${RESET}"
 }
 
 # Function to set up the new user
@@ -118,7 +118,7 @@ clone_repository() {
     echo "Checking if repository directory exists..."
     if [ -d "$SERVER_REPO_DIR" ]; then
       echo "Repository directory exists. Deleting old repository and cloning again..."
-      rm -rf "$SERVER_REPO_DIR"  # Delete the entire repository directory
+      sudo rm -rf "$SERVER_REPO_DIR"  # Delete the entire repository directory
     fi
 
     # Create the directory again and clone the repository
