@@ -12,27 +12,10 @@ services:
     depends_on:
       user-db:
         condition: service_healthy
+    ports:
+      - "${USER_SERVICE_PORT}:${USER_SERVICE_PORT}"  # Map the user service port from the host to the container    
     env_file:
       - .env
-    networks:
-      - app-network
-
-  # User Database
-  user-db:
-    image: postgres:15
-    container_name: ${USER_POSTGRES_DB_CONTAINER_NAME}
-    restart: always
-    environment:
-      POSTGRES_USER: ${USER_POSTGRES_DB_USER}
-      POSTGRES_PASSWORD: ${USER_POSTGRES_DB_PASSWORD}
-      POSTGRES_DB: ${USER_POSTGRES_DB_NAME}
-    healthcheck:
-      test: ["CMD", "pg_isready", "-U", "${USER_POSTGRES_DB_USER}", "-d", "${USER_POSTGRES_DB_NAME}"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
-    volumes:
-      - user_db_data:/var/lib/postgresql/data
     networks:
       - app-network
 
@@ -47,10 +30,31 @@ services:
     depends_on:
       user-db:
         condition: service_healthy
+    ports:
+      - "${MAIL_SERVICE_PORT}:${MAIL_SERVICE_PORT}"    
     env_file:
       - .env
+    networks:
+      - app-network    
+
+  # User Database
+  user-db:
+    image: postgres:15
+    container_name: ${USER_POSTGRES_DB_CONTAINER_NAME}
+    restart: always
     environment:
-      - MAIL_SERVICE_PORT=${MAIL_SERVICE_PORT}
+      POSTGRES_USER: ${USER_POSTGRES_DB_USER}
+      POSTGRES_PASSWORD: ${USER_POSTGRES_DB_PASSWORD}
+      POSTGRES_DB: ${USER_POSTGRES_DB_NAME}
+    ports:
+      - "${USER_POSTGRES_DB_PORT}:5432"  # Map PostgreSQL port from the host to the container  
+    healthcheck:
+      test: ["CMD", "pg_isready", "-U", "${USER_POSTGRES_DB_USER}", "-d", "${USER_POSTGRES_DB_NAME}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    volumes:
+      - user_db_data:/var/lib/postgresql/data
     networks:
       - app-network
 
@@ -63,6 +67,8 @@ services:
       POSTGRES_USER: ${MAIL_POSTGRES_DB_USER}
       POSTGRES_PASSWORD: ${MAIL_POSTGRES_DB_PASSWORD}
       POSTGRES_DB: ${MAIL_POSTGRES_DB_NAME}
+    ports:
+      - "${MAIL_POSTGRES_DB_PORT}:5432"  # Map PostgreSQL port from the host to the container  
     healthcheck:
       test: ["CMD", "pg_isready", "-U", "${MAIL_POSTGRES_DB_USER}", "-d", "${MAIL_POSTGRES_DB_NAME}"]
       interval: 10s
