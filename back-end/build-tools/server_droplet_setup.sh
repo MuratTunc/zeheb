@@ -167,7 +167,8 @@ EOF
 make_back_end_services() {
   success "Running 'make' commands for back-end services..."
   ssh "$NEW_USER@$SERVER_IP" << EOF
-    set -e
+    set -e  # Exit immediately if a command fails
+    set -x  # Print each command before executing (debug mode)
     cd "$SERVER_BULID_TOOLS_DIR"
     echo "🔥 Building Services..."
     sudo make -s build
