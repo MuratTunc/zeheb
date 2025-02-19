@@ -21,7 +21,7 @@ SERVER_REPO_DIR="/home/$NEW_USER/zeheb"  # Dynamically set the repository direct
 SERVER_BULID_TOOLS_DIR="/home/$NEW_USER/zeheb/back-end/build-tools"  # Directory for the install script
 
 LOCAL_ENV_FILE="$(dirname "$0")/.env"  # Path to the .env file (same directory as this script)
-LOCAL_NGINX_CONF_FILE="$(dirname "$0")/$DOMAIN_NAME.conf"  # Path to the .env file (same directory as this script)
+
 
 # Color definitions
 RED="\033[0;31m"
@@ -233,34 +233,54 @@ EOF
   
 }
 
-# Function to configure Nginx on the server
 nginx_file_transfer() {
   start "Transfer Nginx conf file to server droplet..."
 
-  # SSH into the server and set up Nginx
+  DOMAIN_NAME="${DOMAIN_NAME}"
+  SCRIPT_DIR="/home/mutu/projects/zeheb/back-end/build-tools"  # Update if necessary
+  LOCAL_NGINX_CONF_FILE="$SCRIPT_DIR/$DOMAIN_NAME.conf"
+
+  # Debugging: Print paths
+  echo "🔎 Checking for: $LOCAL_NGINX_CONF_FILE"
+
+  # Check if the file exists locally
+  if [ ! -f "$LOCAL_NGINX_CONF_FILE" ]; then
+    error "❌ Local Nginx config file '$LOCAL_NGINX_CONF_FILE' does not exist!"
+    exit 1
+  fi
+
+  # Ensure directory exists
   ssh "$NEW_USER@$SERVER_IP" << EOF
     set -e
-
-    # Check if /etc/nginx/sites-available exists, if not, create it
     if [ ! -d "/etc/nginx/sites-available" ]; then
       sudo mkdir -p /etc/nginx/sites-available
-      echo "Created /etc/nginx/sites-available directory."
+      echo "✅ Created /etc/nginx/sites-available directory."
     else
-      echo "/etc/nginx/sites-available already exists."
+      echo "ℹ️ /etc/nginx/sites-available already exists."
     fi
+EOF
 
-    # Transfer the Nginx configuration file
-    scp "$LOCAL_NGINX_CONF_FILE" "$NEW_USER@$SERVER_IP:/etc/nginx/sites-available/$DOMAIN_NAME.conf"
+  # Transfer file to a temporary location first (where user has access)
+  scp "$LOCAL_NGINX_CONF_FILE" "$NEW_USER@$SERVER_IP:/tmp/$DOMAIN_NAME.conf"
 
+  # Move the file to the correct directory using sudo
+  ssh "$NEW_USER@$SERVER_IP" << EOF
+    sudo mv /tmp/$DOMAIN_NAME.conf /etc/nginx/sites-available/$DOMAIN_NAME.conf
+    sudo chown root:root /etc/nginx/sites-available/$DOMAIN_NAME.conf
+    sudo chmod 644 /etc/nginx/sites-available/$DOMAIN_NAME.conf
 EOF
 
   if [ $? -eq 0 ]; then
-    success "Nginx configuration transferred successfully!"
+    success "✅ Nginx configuration transferred successfully!"
   else
-    error "Failed to transfer Nginx configuration."
+    error "❌ Failed to transfer Nginx configuration."
     exit 1
   fi
 }
+
+
+
+
 
 # Main Execution
 success "Starting server droplet setup process..."
