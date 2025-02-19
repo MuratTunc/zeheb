@@ -21,6 +21,7 @@ SERVER_REPO_DIR="/home/$NEW_USER/zeheb"  # Dynamically set the repository direct
 SERVER_BULID_TOOLS_DIR="/home/$NEW_USER/zeheb/back-end/build-tools"  # Directory for the install script
 
 LOCAL_ENV_FILE="$(dirname "$0")/.env"  # Path to the .env file (same directory as this script)
+EMAIL_ADDRESS="murat.tunc8558@gmail.com"
 
 
 # Color definitions
@@ -268,6 +269,26 @@ EOF
 
 
 
+install_ssl() {
+  echo "🔒🔒🔒 Installing Let's Encrypt SSL for $DOMAIN_NAME.com and www.$DOMAIN_NAME.com..."
+
+  # Install Certbot if not installed
+  if ! command -v certbot &>/dev/null; then
+    sudo apt update
+    sudo apt install -y certbot python3-certbot-nginx
+  fi
+
+  # Run Certbot to get SSL certificates automatically
+  sudo certbot --nginx --non-interactive --agree-tos --email "$EMAIL_ADDRESS" -d "$DOMAIN_NAME.com" -d "www.$DOMAIN_NAME.com" --redirect
+
+  if [ $? -eq 0 ]; then
+    echo "✅ SSL installed successfully for $DOMAIN_NAME.com and www.$DOMAIN_NAME.com!"
+  else
+    echo "❌ SSL installation failed!"
+    exit 1
+  fi
+}
+
 
 
 # Main Execution
@@ -280,5 +301,6 @@ install
 make_back_end_services
 build_web_app_in_local_pc
 nginx_configuration
+install_ssl
 success "All tasks completed successfully!"
 echo "✅✅✅✅✅✅✅✅✅✅✅✅✅✅✅✅✅"
