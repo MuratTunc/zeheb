@@ -297,8 +297,10 @@ install_ssl() {
     sudo ufw reload
   fi
 
+  echo -e 
+
   # Run Certbot to obtain and install SSL
-  sudo certbot --nginx --non-interactive --agree-tos --email "$EMAIL_ADDRESS" -d "$DOMAIN_NAME" -d "www.$DOMAIN_NAME.com" --redirect
+  sudo certbot --nginx --non-interactive --agree-tos --email "$EMAIL_ADDRESS" -d "$DOMAIN_NAME".com -d "www.$DOMAIN_NAME.com" --redirect
 
   if [ $? -eq 0 ]; then
     echo "✅ SSL installed successfully for $DOMAIN_NAME and www.$DOMAIN_NAME!"
