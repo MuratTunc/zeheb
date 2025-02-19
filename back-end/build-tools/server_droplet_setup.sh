@@ -21,7 +21,6 @@ SERVER_REPO_DIR="/home/$NEW_USER/zeheb"  # Dynamically set the repository direct
 SERVER_BULID_TOOLS_DIR="/home/$NEW_USER/zeheb/back-end/build-tools"  # Directory for the install script
 
 LOCAL_ENV_FILE="$(dirname "$0")/.env"  # Path to the .env file (same directory as this script)
-EMAIL_ADDRESS="murat.tunc8558@gmail.com"
 
 
 # Color definitions
@@ -268,9 +267,6 @@ EOF
 }
 
 
-
-
-
 install_ssl() {
   echo "🔒🔒🔒 Installing Let's Encrypt SSL for $DOMAIN_NAME and www.$DOMAIN_NAME..."
 
@@ -299,8 +295,9 @@ install_ssl() {
 
   echo -e 
 
-  # Run Certbot to obtain and install SSL
-  sudo certbot --nginx --non-interactive --agree-tos --email "$EMAIL_ADDRESS" -d "$DOMAIN_NAME".com -d "www.$DOMAIN_NAME.com" --redirect
+  echo "🔒🔒🔒 Run Certbot to obtain and install SSL"
+  
+  sudo certbot --nginx -d "$DOMAIN_NAME".com  "www.$DOMAIN_NAME.com"
 
   if [ $? -eq 0 ]; then
     echo "✅ SSL installed successfully for $DOMAIN_NAME and www.$DOMAIN_NAME!"

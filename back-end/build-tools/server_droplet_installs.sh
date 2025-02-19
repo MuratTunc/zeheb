@@ -1,5 +1,17 @@
 #!/bin/bash
 
+# Load .env file
+ENV_FILE="$(dirname "$0")/.env"  # Path to the .env file (same directory as this script)
+if [ -f "$ENV_FILE" ]; then
+  source "$ENV_FILE"
+else
+  echo "Error: .env file not found at $ENV_FILE"
+  exit 1
+fi
+
+USER_SERVICE_PORT="${USER_SERVICE_PORT}"
+MAIL_SERVICE_PORT="${MAIL_SERVICE_PORT}"
+
 # Colors
 GREEN='\033[0;32m'
 RED='\033[0;31m'
@@ -18,6 +30,8 @@ print_success() { echo -e "✅✅✅ ${GREEN}$1${NC}"; }
 
 # Function to print error messages
 print_error() { echo -e "❌❌❌ ${RED}$1${NC}"; }
+
+
 
 # Function to check if script is run as root
 check_root() {
@@ -101,6 +115,21 @@ install_nginx() {
       print_success "Nginx is already running."
     fi
   fi
+
+  # Allow HTTP (port 80) and HTTPS (port 443) through the firewall
+  start "Checking and allowing ports  through the firewall..."
+  sudo ufw allow 80/tcp
+  sudo ufw allow 443/tcp
+  sudo ufw allow USER_SERVICE_PORT/tcp
+  sudo ufw allow MAIL_SERVICE_PORT/tcp
+
+  # Reload UFW to apply changes
+  sudo ufw reload
+
+  # Display the current UFW status
+  start "Displaying current UFW status:"
+  sudo ufw status verbose
+
 }
 
 
@@ -201,33 +230,7 @@ setup_go_environment() {
   fi
 }
 
-# Function to allow ports 80 and 443 through the firewall and display the status
-allow_ports_and_show_status() {
-    # Allow HTTP (port 80) and HTTPS (port 443) through the firewall
-    start "Checking and allowing ports  through the firewall..."
-    sudo ufw allow 80/tcp
-    sudo ufw allow 443/tcp
-    sudo ufw allow 8080/tcp
-    sudo ufw allow 8081/tcp
 
-    # Reload UFW to apply changes
-    sudo ufw reload
-
-    # Display the current UFW status
-    start "Displaying current UFW status:"
-    sudo ufw status verbose
-}
-
-# Function to check if Nginx is actively listening on ports 80 and 443
-check_nginx_ports() {
-  start "Checking Nginx active ports..."
-  if netstat -tuln | grep -q ":80\|:443"; then
-    print_success "Nginx is actively listening on the following ports:"
-    netstat -tuln | grep -E "Proto|:80|:443"
-  else
-    print_error "Nginx is not actively listening on ports 80 or 443."
-  fi
-}
 
 # Main script execution
 check_root
@@ -241,8 +244,6 @@ install_certbot
 install_make
 install_go
 setup_go_environment
-allow_ports_and_show_status
-check_nginx_ports
 
 print_success "<--Setup completed successfully-->"
 print_success "*************************************************"
