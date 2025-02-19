@@ -9,7 +9,7 @@ RESET="\033[0m"
 
 # Function to display start messages
 start() {
-  echo -e "🔄🔄🔄 *****************************🔄🔄🔄 ${YELLOW}$1${RESET}"
+  echo -e "*********************************************"
   echo -e "🔄🔄🔄 ${YELLOW}$1${RESET}"
 }
 
@@ -144,14 +144,6 @@ else
 fi
 
 
-# Display Nginx active ports
-start "Checking Nginx active ports..."
-if netstat -tuln | grep -q ":80\|:443"; then
-  print_success "Nginx is actively listening on the following ports:"
-  netstat -tuln | grep -E "Proto|:80|:443"
-else
-  print_error "Nginx is not actively listening on ports 80 or 443."
-fi
 
 print_success "<--Setup completed successfully-->"
 

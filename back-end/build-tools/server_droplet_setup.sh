@@ -21,6 +21,7 @@ SERVER_REPO_DIR="/home/$NEW_USER/zeheb"  # Dynamically set the repository direct
 SERVER_BULID_TOOLS_DIR="/home/$NEW_USER/zeheb/back-end/build-tools"  # Directory for the install script
 
 LOCAL_ENV_FILE="$(dirname "$0")/.env"  # Path to the .env file (same directory as this script)
+LOCAL_NGINX_CONF_FILE="$(dirname "$0")/$DOMAIN_NAME.conf"  # Path to the .env file (same directory as this script)
 
 # Color definitions
 RED="\033[0;31m"
@@ -30,9 +31,10 @@ RESET="\033[0m"
 
 # Function to display start messages
 start() {
-  echo -e "🔄🔄🔄 *****************************🔄🔄🔄 ${YELLOW}$1${RESET}"
+  echo -e "*********************************************"
   echo -e "🔄🔄🔄 ${YELLOW}$1${RESET}"
 }
+
 
 # Function to display success messages
 success() {
@@ -248,7 +250,7 @@ nginx_file_transfer() {
     fi
 
     # Transfer the Nginx configuration file
-    scp "./$DOMAIN_NAME.conf" "$NEW_USER@$SERVER_IP:/etc/nginx/sites-available/$DOMAIN_NAME.conf"
+    scp "$LOCAL_NGINX_CONF_FILE" "$NEW_USER@$SERVER_IP:/etc/nginx/sites-available/$DOMAIN_NAME.conf"
 
 EOF
 
