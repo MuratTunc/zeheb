@@ -269,8 +269,20 @@ EOF
 
 
 
+
+
 install_ssl() {
-  echo "🔒🔒🔒 Installing Let's Encrypt SSL for $DOMAIN_NAME.com and www.$DOMAIN_NAME.com..."
+  echo "🔒🔒🔒 Installing Let's Encrypt SSL for $DOMAIN_NAME and www.$DOMAIN_NAME..."
+
+  # Ensure Nginx is installed and running
+  if ! command -v nginx &>/dev/null; then
+    echo "⚠️ Nginx is not installed. Installing it now..."
+    sudo apt update
+    sudo apt install -y nginx
+  fi
+
+  sudo systemctl start nginx
+  sudo systemctl enable nginx
 
   # Install Certbot if not installed
   if ! command -v certbot &>/dev/null; then
@@ -278,11 +290,18 @@ install_ssl() {
     sudo apt install -y certbot python3-certbot-nginx
   fi
 
-  # Run Certbot to get SSL certificates automatically
-  sudo certbot --nginx --non-interactive --agree-tos --email "$EMAIL_ADDRESS" -d "$DOMAIN_NAME.com" -d "www.$DOMAIN_NAME.com" --redirect
+  # Ensure UFW allows HTTPS (if UFW is installed)
+  if command -v ufw &>/dev/null; then
+    echo "🔄 Updating firewall rules..."
+    sudo ufw allow 'Nginx Full'
+    sudo ufw reload
+  fi
+
+  # Run Certbot to obtain and install SSL
+  sudo certbot --nginx --non-interactive --agree-tos --email "$EMAIL_ADDRESS" -d "$DOMAIN_NAME" -d "www.$DOMAIN_NAME.com" --redirect
 
   if [ $? -eq 0 ]; then
-    echo "✅ SSL installed successfully for $DOMAIN_NAME.com and www.$DOMAIN_NAME.com!"
+    echo "✅ SSL installed successfully for $DOMAIN_NAME and www.$DOMAIN_NAME!"
   else
     echo "❌ SSL installation failed!"
     exit 1
