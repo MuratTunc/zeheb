@@ -25,7 +25,6 @@ build: stop_all_containers clean_volumes check_postgres build_user_service build
 
 
 
-
 ## stop_all_containers: Stops and removes all running Docker containers
 stop_all_containers:
 	$(MAKE) stop_down_containers

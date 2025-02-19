@@ -233,47 +233,35 @@ EOF
   
 }
 
-nginx_file_transfer() {
-  start "Transfer Nginx conf file to server droplet..."
+# Function to configure Nginx on the server
+nginx_configuration() {
+  success "Configuring Nginx on the server..."
 
-  DOMAIN_NAME="${DOMAIN_NAME}"
-  SCRIPT_DIR="/home/mutu/projects/zeheb/back-end/build-tools"  # Update if necessary
-  LOCAL_NGINX_CONF_FILE="$SCRIPT_DIR/$DOMAIN_NAME.conf"
-
-  # Debugging: Print paths
-  echo "🔎 Checking for: $LOCAL_NGINX_CONF_FILE"
-
-  # Check if the file exists locally
-  if [ ! -f "$LOCAL_NGINX_CONF_FILE" ]; then
-    error "❌ Local Nginx config file '$LOCAL_NGINX_CONF_FILE' does not exist!"
-    exit 1
-  fi
-
-  # Ensure directory exists
+  # SSH into the server and set up Nginx
   ssh "$NEW_USER@$SERVER_IP" << EOF
     set -e
-    if [ ! -d "/etc/nginx/sites-available" ]; then
-      sudo mkdir -p /etc/nginx/sites-available
-      echo "✅ Created /etc/nginx/sites-available directory."
+
+    # Copy the Nginx configuration file from the cloned repository to the correct location
+    sudo cp $SERVER_BULID_TOOLS_DIR/$DOMAIN_NAME /etc/nginx/sites-available/$DOMAIN_NAME
+
+    # Enable the Nginx site
+    sudo ln -sf /etc/nginx/sites-available/$DOMAIN_NAME /etc/nginx/sites-enabled/
+
+    # Test Nginx configuration and reload if successful
+    if sudo nginx -t; then
+      sudo systemctl reload nginx
+      sudo chown -R www-data:www-data /var/www/html/build
+      sudo chmod -R 755 /var/www/html/build
     else
-      echo "ℹ️ /etc/nginx/sites-available already exists."
+      error "Nginx configuration test failed."
+      exit 1
     fi
 EOF
 
-  # Transfer file to a temporary location first (where user has access)
-  scp "$LOCAL_NGINX_CONF_FILE" "$NEW_USER@$SERVER_IP:/tmp/$DOMAIN_NAME.conf"
-
-  # Move the file to the correct directory using sudo
-  ssh "$NEW_USER@$SERVER_IP" << EOF
-    sudo mv /tmp/$DOMAIN_NAME.conf /etc/nginx/sites-available/$DOMAIN_NAME.conf
-    sudo chown root:root /etc/nginx/sites-available/$DOMAIN_NAME.conf
-    sudo chmod 644 /etc/nginx/sites-available/$DOMAIN_NAME.conf
-EOF
-
   if [ $? -eq 0 ]; then
-    success "✅ Nginx configuration transferred successfully!"
+    success "Nginx configured and reloaded successfully!"
   else
-    error "❌ Failed to transfer Nginx configuration."
+    error "Failed to configure Nginx."
     exit 1
   fi
 }
@@ -291,6 +279,6 @@ transfer_envfile
 install
 make_back_end_services
 build_web_app_in_local_pc
-nginx_file_transfer
+nginx_configuration
 success "All tasks completed successfully!"
 echo "✅✅✅✅✅✅✅✅✅✅✅✅✅✅✅✅✅"
