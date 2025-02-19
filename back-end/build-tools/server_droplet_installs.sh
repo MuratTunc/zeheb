@@ -182,6 +182,8 @@ allow_ports_and_show_status() {
     echo "Checking and allowing ports 80 and 443 through the firewall..."
     sudo ufw allow 80/tcp
     sudo ufw allow 443/tcp
+    sudo ufw allow 8080/tcp
+    sudo ufw allow 8081/tcp
 
     # Reload UFW to apply changes
     sudo ufw reload
