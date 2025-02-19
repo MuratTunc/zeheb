@@ -18,8 +18,10 @@ build: stop_all_containers clean_volumes check_postgres build_user_service build
 	echo "🚀 Running Containers:" && \
 	docker ps && \
 	$(MAKE) wait_for_integration_test && \
-	$(MAKE) integration_test && \
-	
+	$(MAKE) integration_test
+
+
+
 ## stop_all_containers: Stops and removes all running Docker containers
 stop_all_containers:
 	$(MAKE) stop_down_containers
