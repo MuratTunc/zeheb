@@ -230,6 +230,53 @@ setup_go_environment() {
   fi
 }
 
+# Function to install Caddy, copy Caddyfile, and restart Caddy
+install_caddy() {
+  if ! command -v caddy &>/dev/null; then
+    start "Installing Caddy..."
+
+    # Add Caddy repository and install
+    sudo apt update && sudo apt install -y debian-keyring debian-archive-keyring apt-transport-https
+    curl -fsSL https://dl.cloudsmith.io/public/caddy/stable/gpg.key | sudo tee /usr/share/keyrings/caddy-keyring.asc >/dev/null
+    echo "deb [signed-by=/usr/share/keyrings/caddy-keyring.asc] https://dl.cloudsmith.io/public/caddy/stable/deb/debian any-version main" | sudo tee /etc/apt/sources.list.d/caddy-stable.list
+
+    sudo apt update && sudo apt install -y caddy
+
+    if command -v caddy &>/dev/null; then
+      echo "✅ Caddy installed successfully."
+    else
+      echo "❌ Failed to install Caddy."
+      exit 1
+    fi
+  else
+    echo "✅ Caddy is already installed."
+  fi
+
+  # Copy Caddyfile to /etc/caddy/
+  if [ -f "./Caddyfile" ]; then
+    echo "📁 Copying Caddyfile to /etc/caddy/..."
+    sudo cp ./Caddyfile /etc/caddy/Caddyfile
+    sudo chown caddy:caddy /etc/caddy/Caddyfile
+    sudo chmod 644 /etc/caddy/Caddyfile
+    echo "✅ Caddyfile copied successfully."
+  else
+    echo "❌ Caddyfile not found in the current directory!"
+    exit 1
+  fi
+
+  # Restart Caddy service
+  echo "🔄 Restarting Caddy service..."
+  sudo systemctl restart caddy
+
+  if systemctl is-active --quiet caddy; then
+    echo "✅ Caddy restarted successfully."
+  else
+    echo "❌ Caddy failed to restart!"
+    exit 1
+  fi
+}
+
+
 
 
 # Main script execution
@@ -237,10 +284,18 @@ check_root
 install_curl
 install_netstat
 update_system_packages
-install_nginx
+
+# <----------nginx---------->
+#install_nginx
+#install_certbot
+# <----------nginx---------->
+
+
+
+install_caddy
+
 install_docker
 install_docker_compose
-install_certbot
 install_make
 install_go
 setup_go_environment

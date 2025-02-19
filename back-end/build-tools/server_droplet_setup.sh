@@ -296,7 +296,7 @@ install_ssl() {
   echo -e 
 
   echo "🔒🔒🔒 Run Certbot to obtain and install SSL"
-  
+
   sudo certbot --nginx -d "$DOMAIN_NAME".com  "www.$DOMAIN_NAME.com"
 
   if [ $? -eq 0 ]; then
@@ -318,7 +318,11 @@ transfer_envfile
 install
 make_back_end_services
 build_web_app_in_local_pc
-nginx_configuration
-install_ssl
+
+# <----------nginx---------->
+#nginx_configuration
+#install_ssl
+# <----------nginx---------->
+
 success "All tasks completed successfully!"
 echo "✅✅✅✅✅✅✅✅✅✅✅✅✅✅✅✅✅"

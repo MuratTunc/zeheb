@@ -1,0 +1,6 @@
+zehebfind.com, www.zehebfind.com {
+    root * /var/www/html/build
+    file_server
+    reverse_proxy /user/* http://127.0.0.1:8080
+    reverse_proxy /mail/* http://127.0.0.1:8081
+}
