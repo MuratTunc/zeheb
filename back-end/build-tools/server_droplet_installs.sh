@@ -57,7 +57,7 @@ install_netstat() {
 
 # Function to update system packages
 update_system_packages() {
-  echo "Updating package list..."
+  start "Updating package list..."
   if apt update && apt upgrade -y; then
     print_success "System packages updated successfully."
   else
@@ -65,19 +65,44 @@ update_system_packages() {
   fi
 }
 
-# Function to install Nginx
+# Function to install and configure Nginx
 install_nginx() {
   if ! nginx -v &>/dev/null; then
-    echo "Installing Nginx..."
-    if apt install -y nginx && systemctl enable nginx && systemctl start nginx; then
-      print_success "Nginx installed and started successfully."
+    start "Nginx is not installed. Installing Nginx..."
+
+    # Install Nginx
+    if apt install -y nginx; then
+      print_success "Nginx installed successfully."
+
+      # Enable and start Nginx if it's not active
+      if ! systemctl is-active --quiet nginx; then
+        sudo systemctl enable nginx && sudo systemctl start nginx
+        print_success "Nginx started and enabled to start on boot."
+      else
+        print_success "Nginx is already running."
+      fi
     else
-      print_error "Failed to install or start Nginx."
+      print_error "Failed to install Nginx."
+      exit 1
     fi
   else
     print_success "Nginx is already installed."
+    
+    # Ensure Nginx is enabled and started
+    if ! systemctl is-enabled --quiet nginx; then
+      sudo systemctl enable nginx
+      print_success "Nginx enabled to start on boot."
+    fi
+
+    if ! systemctl is-active --quiet nginx; then
+      sudo systemctl start nginx
+      print_success "Nginx started successfully."
+    else
+      print_success "Nginx is already running."
+    fi
   fi
 }
+
 
 # Function to install Docker
 install_docker() {
@@ -167,7 +192,7 @@ setup_go_environment() {
   export PATH=$PATH:/usr/local/go/bin
 
   # Verify Go installation
-  start "Go version:"
+  start "Verify Go installation:"
   if go version; then
     print_success "Go is working as expected."
   else
@@ -179,7 +204,7 @@ setup_go_environment() {
 # Function to allow ports 80 and 443 through the firewall and display the status
 allow_ports_and_show_status() {
     # Allow HTTP (port 80) and HTTPS (port 443) through the firewall
-    echo "Checking and allowing ports 80 and 443 through the firewall..."
+    start "Checking and allowing ports  through the firewall..."
     sudo ufw allow 80/tcp
     sudo ufw allow 443/tcp
     sudo ufw allow 8080/tcp
@@ -189,13 +214,13 @@ allow_ports_and_show_status() {
     sudo ufw reload
 
     # Display the current UFW status
-    echo "Displaying current UFW status:"
+    start "Displaying current UFW status:"
     sudo ufw status verbose
 }
 
 # Function to check if Nginx is actively listening on ports 80 and 443
 check_nginx_ports() {
-  echo "Checking Nginx active ports..."
+  start "Checking Nginx active ports..."
   if netstat -tuln | grep -q ":80\|:443"; then
     print_success "Nginx is actively listening on the following ports:"
     netstat -tuln | grep -E "Proto|:80|:443"
