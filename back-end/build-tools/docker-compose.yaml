@@ -80,6 +80,7 @@ services:
       - app-network
 
   # Nginx Reverse Proxy
+  # Nginx Reverse Proxy
   nginx:
     image: nginx:latest
     container_name: nginx
@@ -87,8 +88,8 @@ services:
     ports:
       - "${NGINX_SERVICE_PORT}:80"
     volumes:
-      - ./build-tools/zehebfind.conf:/etc/nginx/conf.d/default.conf:ro
-      - ./../frontend/build:/usr/share/nginx/html
+      -  /etc/nginx/sites-available/zehebfind.conf:/etc/nginx/conf.d/zehebfind.conf:ro
+      - ./../frontend/build:/usr/share/nginx/html  # Ensure frontend build folder exists
     depends_on:
       - user-service
       - mail-service
