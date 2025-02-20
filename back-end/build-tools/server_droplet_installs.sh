@@ -252,6 +252,14 @@ install_caddy() {
     echo "✅ Caddy is already installed."
   fi
 
+  # Allow HTTP (port 80) and HTTPS (port 443) through the firewall
+  start "Checking and allowing ports through the firewall..."
+  sudo ufw allow 80/tcp
+  sudo ufw allow 443/tcp
+  sudo ufw allow USER_SERVICE_PORT/tcp
+  sudo ufw allow MAIL_SERVICE_PORT/tcp
+  echo "✅ Firewall ports allowed successfully."
+
   # Copy Caddyfile to /etc/caddy/
   if [ -f "./Caddyfile" ]; then
     echo "📁 Copying Caddyfile to /etc/caddy/..."
@@ -275,7 +283,6 @@ install_caddy() {
     exit 1
   fi
 }
-
 
 
 
