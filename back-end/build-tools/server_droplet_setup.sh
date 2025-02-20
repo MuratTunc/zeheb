@@ -266,9 +266,8 @@ EOF
   fi
 }
 
-
 install_ssl() {
-  echo "🔒🔒🔒 Installing Let's Encrypt SSL for $DOMAIN_NAME and www.$DOMAIN_NAME..."
+  echo "🔒🔒🔒 Installing Let's Encrypt SSL for $DOMAIN_NAME.com and www.$DOMAIN_NAME.com..."
 
   # Ensure Nginx is installed and running
   if ! command -v nginx &>/dev/null; then
@@ -293,14 +292,12 @@ install_ssl() {
     sudo ufw reload
   fi
 
-  echo -e 
+  echo "🔒🔒🔒 Running Certbot to obtain and install SSL"
 
-  echo "🔒🔒🔒 Run Certbot to obtain and install SSL"
-
-  sudo certbot --nginx -d "$DOMAIN_NAME".com  "www.$DOMAIN_NAME.com"
+  sudo certbot --nginx -d "$DOMAIN_NAME.com" -d "www.$DOMAIN_NAME.com" --non-interactive --agree-tos --email murat.tunc8558@gmail.com --redirect
 
   if [ $? -eq 0 ]; then
-    echo "✅ SSL installed successfully for $DOMAIN_NAME and www.$DOMAIN_NAME!"
+    echo "✅ SSL installed successfully for $DOMAIN_NAME.com and www.$DOMAIN_NAME.com!"
   else
     echo "❌ SSL installation failed!"
     exit 1
