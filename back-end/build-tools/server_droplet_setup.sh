@@ -320,8 +320,8 @@ make_back_end_services
 build_web_app_in_local_pc
 
 # <----------nginx---------->
-#nginx_configuration
-#install_ssl
+nginx_configuration
+install_ssl
 # <----------nginx---------->
 
 success "All tasks completed successfully!"

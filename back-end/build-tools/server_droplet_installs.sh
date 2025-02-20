@@ -293,13 +293,13 @@ install_netstat
 update_system_packages
 
 # <----------nginx---------->
-#install_nginx
-#install_certbot
+install_nginx
+install_certbot
 # <----------nginx---------->
 
 
 
-install_caddy
+#install_caddy
 
 install_docker
 install_docker_compose
