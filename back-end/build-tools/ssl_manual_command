@@ -1,0 +1,3 @@
+sudo certbot --nginx -d zehebfind.com -d www.zehebfind.com
+
+
