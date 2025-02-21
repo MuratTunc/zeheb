@@ -47,7 +47,7 @@ error() {
 }
 
 # Function to generate Nginx config
-generate_nginx_config() {
+generate_nginxConfiguration_file() {
   start "Generating Nginx configuration file..."
   
   SCRIPT_DIR="$(dirname "$0")"
@@ -185,8 +185,27 @@ transfer_envfile() {
   fi
 }
 
+# Function to copy .env file to the server
+transfer_nginxConfiguration_file() {
+  start "Copying the DNS ngninx configuration file to the server..."
+  NGINXCONF_FILE_DIR="$(dirname "$0")"
+  NGINXCONF_FILE_PATH="$NGINXCONF_FILE_DIR/$DOMAIN_NAME"
+  
+  scp "$NGINXCONF_FILE_PATH" "$NEW_USER@$SERVER_IP:/etc/nginx/sites-available/$DOMAIN_NAME"
+
+  if [ $? -eq 0 ]; then
+    success ".env file copied successfully to $SERVER_BULID_TOOLS_DIR."
+  else
+    error "Failed to copy the .env file to the server."
+    exit 1
+  fi
+}
+
+
+
+
 # Function to run the server installation script
-install() {
+install_systemPackages() {
   start "Running server_droplet_installs.sh..."
   ssh "$NEW_USER@$SERVER_IP" << EOF
     set -e
@@ -264,9 +283,6 @@ nginx_configuration() {
   ssh "$NEW_USER@$SERVER_IP" << EOF
     set -e
 
-    # Copy the Nginx configuration file from the cloned repository to the correct location
-    sudo cp $SERVER_BULID_TOOLS_DIR/$DOMAIN_NAME /etc/nginx/sites-available/$DOMAIN_NAME
-
     # Enable the Nginx site
     sudo ln -sf /etc/nginx/sites-available/$DOMAIN_NAME /etc/nginx/sites-enabled/
 
@@ -284,6 +300,12 @@ nginx_configuration() {
       # Create a test file to verify the Nginx server is properly serving the challenge
       echo "test" | sudo tee /var/www/html/.well-known/acme-challenge/testfile
 
+      # Check if the test file is being served correctly
+      curl -I http://$DOMAIN_NAME/.well-known/acme-challenge/testfile || {
+        error "Test file is not accessible. Please check the Nginx configuration."
+        exit 1
+      }
+
     else
       error "Nginx configuration test failed."
       exit 1
@@ -297,6 +319,7 @@ EOF
     exit 1
   fi
 }
+
 
 install_ssl() {
   echo "🔒🔒🔒 Installing Let's Encrypt SSL for $DOMAIN_NAME.com and www.$DOMAIN_NAME.com..."
@@ -336,23 +359,72 @@ install_ssl() {
   fi
 }
 
+# Function to test DNS resolution and compare with expected IP
+test_dns_resolution() {
+  success "Testing DNS resolution for domain..."
+
+  # Use dig to get the IP addresses for the domain and www subdomain
+  dig_ip=$(dig +short $DOMAIN_NAME)
+  dig_www_ip=$(dig +short www.$DOMAIN_NAME)
+
+  # Compare the IPs with SERVER_IP
+  if [[ "$dig_ip" == "$SERVER_IP" && "$dig_www_ip" == "$SERVER_IP" ]]; then
+    success "DNS resolution is correct for $DOMAIN_NAME and www.$DOMAIN_NAME. IP matches $SERVER_IP."
+  else
+    error "DNS resolution mismatch! Expected IP: $SERVER_IP, but got $dig_ip for $DOMAIN_NAME and $dig_www_ip for www.$DOMAIN_NAME."
+    exit 1
+  fi
+}
+
+
 
 
 # Main Execution
+#-------------------------------------#
 success "Starting server droplet setup process..."
-# generate_nginx_config # this function will call generate_nginx_config.sh to generate Nginx conf file in local.
-setup_new_user
-configure_private_ssh_key
-clone_repository
-transfer_envfile
-install
-make_back_end_services
-build_web_app_in_local_pc
+#-------------------------------------#
 
-# <----------nginx---------->
-nginx_configuration #  it will Copy the Nginx configuration file from the cloned repository to the correct location
+#-------------------------------------#
+setup_new_user
+#-------------------------------------#
+
+#-------------------------------------#
+configure_private_ssh_key
+#-------------------------------------#
+
+#-------------------------------------#
+clone_repository
+#-------------------------------------#
+
+#From Developmetn PC to SERVER DROPLET.
+#-------------------------------------#
+transfer_envfile_to_server_droplet
+generate_nginxConfiguration_file
+transfer_nginxConfiguration_file
+#-------------------------------------#
+
+#-------------------------------------#
+install_systemPackages
+#-------------------------------------#
+
+#-------------------------------------#
+make_back_end_services
+#-------------------------------------#
+
+#-------------------------------------#
+build_web_app_in_local_pc
+#-------------------------------------#
+
+#-------------------------------------#
+nginx_configuration
 install_ssl
-# <----------nginx---------->
+
+#💡 Next Steps After SSL Installation
+# Test HTTPS:
+test_dns_resolution
+#-------------------------------------#
+
+
 
 success "All tasks completed successfully!"
 echo "✅✅✅✅✅✅✅✅✅✅✅✅✅✅✅✅✅"
