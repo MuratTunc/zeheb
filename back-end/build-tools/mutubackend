@@ -1,12 +1,12 @@
 server {
     listen 80;
-    server_name www.zehebfind.com;
-    return 301 http://zehebfind.com$request_uri;  # ✅ Redirect www to non-www
+    server_name www.mutubackend.com;
+    return 301 http://mutubackend.com$request_uri;  # ✅ Redirect www to non-www
 }
 
 server {
     listen 80;
-    server_name zehebfind.com;
+    server_name mutubackend.com;
 
     root /var/www/html/build;
     index index.html;

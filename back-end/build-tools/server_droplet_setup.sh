@@ -46,6 +46,29 @@ error() {
   echo -e "❌❌❌ ${RED}$1${RESET}"
 }
 
+# Function to generate Nginx config
+generate_nginx_config() {
+  start "Generating Nginx configuration file..."
+  
+  SCRIPT_DIR="$(dirname "$0")"
+  GENERATE_SCRIPT="$SCRIPT_DIR/generate_nginx_config.sh"
+
+  if [ -f "$GENERATE_SCRIPT" ]; then
+    chmod +x "$GENERATE_SCRIPT"  # Ensure it's executable
+    "$GENERATE_SCRIPT"
+
+    if [ $? -eq 0 ]; then
+      success "Nginx configuration file generated successfully!"
+    else
+      error "Failed to generate Nginx configuration file."
+      exit 1
+    fi
+  else
+    error "generate_nginx_config.sh script not found in $SCRIPT_DIR"
+    exit 1
+  fi
+}
+
 # Function to set up the new user
 setup_new_user() {
   start "Setting up the new user:'$NEW_USER' on the server..."
@@ -308,6 +331,7 @@ install_ssl() {
 
 # Main Execution
 success "Starting server droplet setup process..."
+# generate_nginx_config # this function will call generate_nginx_config.sh to generate Nginx conf file in local.
 setup_new_user
 configure_private_ssh_key
 clone_repository
@@ -317,7 +341,7 @@ make_back_end_services
 build_web_app_in_local_pc
 
 # <----------nginx---------->
-nginx_configuration
+nginx_configuration #  it will Copy the Nginx configuration file from the cloned repository to the correct location
 install_ssl
 # <----------nginx---------->
 
