@@ -1,3 +1,14 @@
 sudo certbot --nginx -d zehebfind.com -d www.zehebfind.com
 
 
+sudo certbot --nginx -d mutubackend.com -d www.mutubackend.com
+
+
+
+
+dig +short mutubackend.com
+dig +short www.mutubackend.com
+164.92.78.231
+164.92.78.231
+mutu@ubuntu-s-1vcpu-2gb-sfo3-01:~$ 
+

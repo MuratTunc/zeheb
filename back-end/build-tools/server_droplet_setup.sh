@@ -275,6 +275,15 @@ nginx_configuration() {
       sudo systemctl reload nginx
       sudo chown -R www-data:www-data /var/www/html/build
       sudo chmod -R 755 /var/www/html/build
+
+      # Create .well-known/acme-challenge/ directory and set permissions
+      sudo mkdir -p /var/www/html/.well-known/acme-challenge/
+      sudo chmod -R 755 /var/www/html/.well-known/
+      sudo chown -R www-data:www-data /var/www/html/.well-known/
+
+      # Create a test file to verify the Nginx server is properly serving the challenge
+      echo "test" | sudo tee /var/www/html/.well-known/acme-challenge/testfile
+
     else
       error "Nginx configuration test failed."
       exit 1
