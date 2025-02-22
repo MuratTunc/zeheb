@@ -317,20 +317,6 @@ nginx_configuration() {
       sudo chmod -R 755 /var/www/html/.well-known/
       sudo chown -R www-data:www-data /var/www/html/.well-known/
 
-      # Create a test file to verify the Nginx server is properly serving the challenge
-      echo "test" | sudo tee /var/www/html/.well-known/acme-challenge/testfile
-
-      # Debug: Check if the domain resolves
-      dig +short $DOMAIN_NAME
-
-      # Check if the test file is being served correctly
-      if curl -I http://$DOMAIN_NAME/.well-known/acme-challenge/testfile; then
-        echo "Test file is accessible!"
-      else
-        echo "Test file is not accessible. Please check the Nginx configuration."
-        exit 1
-      fi
-
     else
       echo "Nginx configuration test failed."
       exit 1
