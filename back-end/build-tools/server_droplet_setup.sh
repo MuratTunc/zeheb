@@ -293,13 +293,15 @@ EOF
   
 }
 
-# Function to configure Nginx on the server
 nginx_configuration() {
   success "Configuring Nginx on the server..."
 
   # SSH into the server and set up Nginx
   ssh "$NEW_USER@$SERVER_IP" << EOF
     set -e
+
+    # Debug: Print domain name
+    echo "Checking domain name: $DOMAIN_NAME"
 
     # Enable the Nginx site
     sudo ln -sf /etc/nginx/sites-available/$DOMAIN_NAME /etc/nginx/sites-enabled/
@@ -318,14 +320,19 @@ nginx_configuration() {
       # Create a test file to verify the Nginx server is properly serving the challenge
       echo "test" | sudo tee /var/www/html/.well-known/acme-challenge/testfile
 
+      # Debug: Check if the domain resolves
+      dig +short $DOMAIN_NAME
+
       # Check if the test file is being served correctly
-      curl -I http://$DOMAIN_NAME/.well-known/acme-challenge/testfile || {
-        error "Test file is not accessible. Please check the Nginx configuration."
+      if curl -I http://$DOMAIN_NAME/.well-known/acme-challenge/testfile; then
+        echo "Test file is accessible!"
+      else
+        echo "Test file is not accessible. Please check the Nginx configuration."
         exit 1
-      }
+      fi
 
     else
-      error "Nginx configuration test failed."
+      echo "Nginx configuration test failed."
       exit 1
     fi
 EOF
@@ -337,6 +344,7 @@ EOF
     exit 1
   fi
 }
+
 
 
 install_ssl() {
