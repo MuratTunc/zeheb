@@ -185,21 +185,39 @@ transfer_envfile() {
   fi
 }
 
-# Function to copy .env file to the server
+
+# Function to copy Nginx configuration file to the server
 transfer_nginxConfiguration_file() {
-  start "Copying the DNS ngninx configuration file to the server..."
+  start "Copying the DNS Nginx configuration file to the server..."
+  
   NGINXCONF_FILE_DIR="$(dirname "$0")"
   NGINXCONF_FILE_PATH="$NGINXCONF_FILE_DIR/$DOMAIN_NAME"
-  
-  scp "$NGINXCONF_FILE_PATH" "$NEW_USER@$SERVER_IP:/etc/nginx/sites-available/$DOMAIN_NAME"
+
+  # First, copy the file to a temporary directory on the remote server
+  scp "$NGINXCONF_FILE_PATH" "$NEW_USER@$SERVER_IP:/tmp/$DOMAIN_NAME"
 
   if [ $? -eq 0 ]; then
-    success ".env file copied successfully to $SERVER_BULID_TOOLS_DIR."
+    success "Nginx config file copied to temporary directory on the server."
+
+    # Move the file to /etc/nginx/sites-available/ with sudo on the server
+    ssh "$NEW_USER@$SERVER_IP" << EOF
+      sudo mv /tmp/$DOMAIN_NAME /etc/nginx/sites-available/$DOMAIN_NAME
+      sudo ln -sf /etc/nginx/sites-available/$DOMAIN_NAME /etc/nginx/sites-enabled/
+      sudo systemctl reload nginx
+EOF
+
+    if [ $? -eq 0 ]; then
+      success "Nginx config file successfully moved and activated."
+    else
+      error "Failed to move Nginx config file to /etc/nginx/sites-available/."
+      exit 1
+    fi
   else
-    error "Failed to copy the .env file to the server."
+    error "Failed to copy the Nginx config file to the server."
     exit 1
   fi
 }
+
 
 
 
