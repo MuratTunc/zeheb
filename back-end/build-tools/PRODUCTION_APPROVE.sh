@@ -23,23 +23,37 @@ RESET="\033[0m"
 success() { echo -e "${GREEN}$1${RESET}"; }
 error() { echo -e "${RED}$1${RESET}"; exit 1; }
 
+# Function to clone the repository on the server
 clone_repository() {
-  if [ "$1" = true ]; then
-    success "Cloning the GitHub repository on the server droplet..."
-    ssh "$NEW_USER@$SERVER_IP" << EOF
-      set -e
-      ssh-keyscan github.com >> ~/.ssh/known_hosts
-      mkdir -p "$SERVER_REPO_DIR"
-      cd "$SERVER_REPO_DIR"
-      if [ -d ".git" ]; then
-        echo "Repository already exists. Pulling latest changes..."
-        git pull
-      else
-        echo "Cloning the repository into $SERVER_REPO_DIR..."
-        git clone "$REPO_GIT_SSH_LINK" .
-      fi
+  start "Cloning the GitHub repository on the server droplet..."
+  ssh "$NEW_USER@$SERVER_IP" << EOF
+    set -e
+    ssh-keyscan github.com >> ~/.ssh/known_hosts
+
+    # Check if the directory exists
+    echo "Checking if repository directory exists..."
+    if [ -d "$SERVER_REPO_DIR" ]; then
+      echo "Repository directory exists. Deleting old repository and cloning again..."
+      sudo rm -rf "$SERVER_REPO_DIR"  # Delete the entire repository directory
+    fi
+
+    # Create the directory again and clone the repository
+    echo "Creating the directory and cloning the repository..."
+    mkdir -p "$SERVER_REPO_DIR"
+    cd "$SERVER_REPO_DIR"
+
+    echo "Cloning the repository..."
+    git clone "$REPO_GIT_SSH_LINK" .
+
+    # Change ownership to the appropriate user after cloning
+    sudo chown -R mutu:mutu "$SERVER_REPO_DIR"
 EOF
-    [ $? -eq 0 ] && success "Repository cloned or updated successfully!" || error "Failed to clone repository."
+
+  if [ $? -eq 0 ]; then
+    success "Repository cloned or updated successfully on the server."
+  else
+    error "Failed to clone or update the repository on the server."
+    exit 1
   fi
 }
 
