@@ -398,7 +398,7 @@ clone_repository
 
 #From Developmetn PC to SERVER DROPLET.
 #-------------------------------------#
-transfer_envfile_to_server_droplet
+transfer_envfile
 
 #-------------------------------------#
 
