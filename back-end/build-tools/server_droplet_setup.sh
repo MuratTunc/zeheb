@@ -399,12 +399,16 @@ clone_repository
 #From Developmetn PC to SERVER DROPLET.
 #-------------------------------------#
 transfer_envfile_to_server_droplet
-generate_nginxConfiguration_file
-transfer_nginxConfiguration_file
+
 #-------------------------------------#
 
 #-------------------------------------#
 install_systemPackages
+#-------------------------------------#
+
+#-------------------------------------#
+generate_nginxConfiguration_file
+transfer_nginxConfiguration_file
 #-------------------------------------#
 
 #-------------------------------------#

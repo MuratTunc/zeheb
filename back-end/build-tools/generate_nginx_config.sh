@@ -64,4 +64,7 @@ server {
 }
 EOL
 
+# Set read and write permissions for the output file
+chmod 664 "$OUTPUT_FILE"
+
 echo "Nginx configuration file '$OUTPUT_FILE' has been created successfully!"
