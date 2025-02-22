@@ -1,56 +1,43 @@
-import React, { useState } from "react";
-import "./Signup.css"; // Importing the CSS file
+import React, { useState, useEffect, useRef } from "react";
+import "./Signup.css";
 
 const Signup = ({ labels }) => {
   const [showPopup, setShowPopup] = useState(false);
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
-  const [confirmPassword, setConfirmPassword] = useState("");
+  const popupRef = useRef(null); // Reference to pop-up
 
-  const handleSignup = () => {
-    console.log("Signing up with:", email, password, confirmPassword);
+  const handleClickOutside = (event) => {
+    if (popupRef.current && !popupRef.current.contains(event.target)) {
+      setShowPopup(false); // Close pop-up
+    }
   };
 
+  useEffect(() => {
+    if (showPopup) {
+      document.addEventListener("mousedown", handleClickOutside);
+    } else {
+      document.removeEventListener("mousedown", handleClickOutside);
+    }
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, [showPopup]);
+
   return (
-    <div className="signup-container">
-      {/* Signup Button */}
+    <div className="signup-container" ref={popupRef}>
       <button className="signup-button" onClick={() => setShowPopup(!showPopup)}>
         {labels.signup}
       </button>
 
-      {/* Popup Form */}
       {showPopup && (
         <div className="signup-popup">
+          <label className="signup-label">{labels.fullName}</label>
+          <input type="text" className="signup-input" placeholder={labels.fullName} />
+
           <label className="signup-label">{labels.email}</label>
-          <input
-            type="email"
-            className="signup-input"
-            placeholder={labels.email}
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-          />
+          <input type="email" className="signup-input" placeholder={labels.email} />
 
           <label className="signup-label">{labels.password}</label>
-          <input
-            type="password"
-            className="signup-input"
-            placeholder={labels.password}
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-          />
+          <input type="password" className="signup-input" placeholder={labels.password} />
 
-          <label className="signup-label">{labels.confirmPassword}</label>
-          <input
-            type="password"
-            className="signup-input"
-            placeholder={labels.confirmPassword}
-            value={confirmPassword}
-            onChange={(e) => setConfirmPassword(e.target.value)}
-          />
-
-          <button className="signup-submit" onClick={handleSignup}>
-            {labels.signup}
-          </button>
+          <button className="signup-submit">{labels.signupButton}</button>
         </div>
       )}
     </div>

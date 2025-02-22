@@ -1,6 +1,7 @@
 import React from "react";
 import "bootstrap/dist/css/bootstrap.min.css";
 import Signin from "./Signin"; // Import Signin component
+import Signup from "./Signup"; // Import Signup component
 
 const Header = () => {
   const labels = {
@@ -8,6 +9,9 @@ const Header = () => {
     email: "Email",
     password: "Password",
     login: "Log in",
+    signup: "Sign up",
+    fullName: "Full Name",
+    signupButton: "Sign Up",
   };
 
   return (
@@ -16,7 +20,7 @@ const Header = () => {
         <a className="navbar-brand" href="#">My App</a>
         <div className="d-flex">
           <Signin labels={labels} /> {/* Signin Component */}
-          <a className="btn btn-light" href="#">Signup</a>
+          <Signup labels={labels} /> {/* Signup Component */}
         </div>
       </div>
     </nav>

@@ -1,46 +1,40 @@
-import React, { useState } from "react";
-import "./Signin.css"; // Importing the CSS file
+import React, { useState, useEffect, useRef } from "react";
+import "./Signin.css";
 
 const Signin = ({ labels }) => {
   const [showPopup, setShowPopup] = useState(false);
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
+  const popupRef = useRef(null); // Reference to pop-up
 
-  const handleLogin = () => {
-    console.log("Logging in with:", email, password);
+  const handleClickOutside = (event) => {
+    if (popupRef.current && !popupRef.current.contains(event.target)) {
+      setShowPopup(false); // Close pop-up
+    }
   };
 
+  useEffect(() => {
+    if (showPopup) {
+      document.addEventListener("mousedown", handleClickOutside);
+    } else {
+      document.removeEventListener("mousedown", handleClickOutside);
+    }
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, [showPopup]);
+
   return (
-    <div className="signin-container">
-      {/* Signin Button */}
+    <div className="signin-container" ref={popupRef}>
       <button className="signin-button" onClick={() => setShowPopup(!showPopup)}>
         {labels.signin}
       </button>
 
-      {/* Popup Form */}
       {showPopup && (
         <div className="signin-popup">
           <label className="signin-label">{labels.email}</label>
-          <input
-            type="email"
-            className="signin-input"
-            placeholder={labels.email}
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-          />
+          <input type="email" className="signin-input" placeholder={labels.email} />
 
           <label className="signin-label">{labels.password}</label>
-          <input
-            type="password"
-            className="signin-input"
-            placeholder={labels.password}
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-          />
+          <input type="password" className="signin-input" placeholder={labels.password} />
 
-          <button className="signin-submit" onClick={handleLogin}>
-            {labels.login}
-          </button>
+          <button className="signin-submit">{labels.login}</button>
         </div>
       )}
     </div>
