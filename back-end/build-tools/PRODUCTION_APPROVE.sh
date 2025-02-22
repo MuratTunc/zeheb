@@ -104,6 +104,6 @@ EOF
 success "******** STARTING PRODUCTION APPROVE PROCESS ********"
 clone_repository true
 transfer_envfile true
-make_back_end_services true
+make_back_end_services false
 build_web_app true
 success "All tasks completed successfully!"

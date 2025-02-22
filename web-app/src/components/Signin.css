@@ -1,26 +1,59 @@
-.signin {
-  display: flex;
-  flex-direction: column;
-  gap: 5px;
-}
-
-.signin input {
-  padding: 5px;
-  font-size: 14px;
-}
-
-.signin button {
-  padding: 5px 10px;
-  margin-top: 5px;
-  font-size: 14px;
-  cursor: pointer;
-}
-
-.cancel-btn {
-  background-color: red; /* Set background color to red */
-  color: white;          /* Set text color to white */
-  border: none;          /* Remove border */
-  padding: 5px 10px;     /* Adjust padding */
-  font-size: 14px;       /* Set font size */
-  cursor: pointer;      /* Change cursor to pointer */
-}
+/* Signin Container */
+.signin-container {
+    position: relative;
+    display: inline-block;
+    margin-right: 15px; /* Adds spacing to the right */
+  }
+  
+  /* Signin Button */
+  .signin-button {
+    padding: 5px 20px;
+    background-color: transparent;
+    border: 1px solid white;
+    color: white;
+    cursor: pointer;
+    border-radius: 5px;
+  }
+  
+/* Popup Form */
+.signin-popup {
+    position: absolute;
+    top: 100%;
+    left: -200px; /* Moves it 20px further to the right */
+    width: 400px;
+    background-color: white;
+    padding: 15px;
+    border-radius: 8px;
+    box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.1);
+    z-index: 1000;
+    margin-top: 5px;
+  }
+  
+  
+  /* Labels */
+  .signin-label {
+    display: block;
+    margin-bottom: 5px;
+    font-weight: bold;
+  }
+  
+  /* Input Fields */
+  .signin-input {
+    width: 100%;
+    padding: 8px;
+    margin-bottom: 10px;
+    border-radius: 4px;
+    border: 1px solid #ccc;
+  }
+  
+  /* Login Button */
+  .signin-submit {
+    width: 100%;
+    padding: 10px;
+    background-color: #007bff;
+    color: white;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+  }
+  

@@ -1,58 +1,25 @@
-import React, { useState } from "react";
-import "bootstrap/dist/css/bootstrap.min.css"; // Bootstrap, if you're also using it
-import Signin from "./Signin";
-import Signup from "./Signup";
-import GoldPrices from "./GoldPrices"; // Import the GoldPrices component
+import React from "react";
+import "bootstrap/dist/css/bootstrap.min.css";
+import Signin from "./Signin"; // Import Signin component
 
 const Header = () => {
-  const [showSignin, setShowSignin] = useState(false);
-  const [showSignup, setShowSignup] = useState(false);
-
-  const handleClosePopup = () => {
-    setShowSignin(false);
-    setShowSignup(false);
+  const labels = {
+    signin: "Sign in",
+    email: "Email",
+    password: "Password",
+    login: "Log in",
   };
 
   return (
-    <>
-      <header className="bg-gray-800 text-white p-4 fixed top-0 w-full flex justify-between items-center shadow-lg z-50">
-        <h1 className="text-xl font-bold">ZEHEP</h1>
-        <div className="text-center flex-grow">
-          {/* Render the GoldPrices component */}
-          <GoldPrices />
+    <nav className="navbar navbar-dark bg-secondary p-3">
+      <div className="container-fluid">
+        <a className="navbar-brand" href="#">My App</a>
+        <div className="d-flex">
+          <Signin labels={labels} /> {/* Signin Component */}
+          <a className="btn btn-light" href="#">Signup</a>
         </div>
-        <div className="space-x-4">
-          <button
-            className="bg-blue-500 text-white py-2 px-4 rounded hover:bg-blue-600"
-            onClick={() => setShowSignin(true)}
-          >
-            SIGN IN
-          </button>
-          <button
-            className="bg-green-500 text-white py-2 px-4 rounded hover:bg-green-600"
-            onClick={() => setShowSignup(true)}
-          >
-            SIGN UP
-          </button>
-        </div>
-      </header>
-
-      {showSignin && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex justify-center items-center">
-          <div className="bg-white rounded-lg p-4 pt-2 shadow-lg">
-            <Signin onCancel={handleClosePopup} />
-          </div>
-        </div>
-      )}
-
-      {showSignup && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex justify-center items-center">
-          <div className="bg-white rounded-lg p-4 pt-2 shadow-lg">
-            <Signup onCancel={handleClosePopup} />
-          </div>
-        </div>
-      )}
-    </>
+      </div>
+    </nav>
   );
 };
 

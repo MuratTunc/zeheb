@@ -1,27 +1,57 @@
-.signup {
-    display: flex;
-    flex-direction: column;
-    gap: 5px;
+/* Signup Container */
+.signup-container {
+    position: relative;
+    display: inline-block;
   }
   
-  .signup input {
-    padding: 5px;
-    font-size: 14px;
-  }
-  
-  .signup button {
-    padding: 5px 10px;
-    margin-top: 5px;
-    font-size: 14px;
+  /* Signup Button */
+  .signup-button {
+    padding: 10px 20px;
+    background-color: transparent;
+    border: 1px solid white;
+    color: white;
     cursor: pointer;
+    border-radius: 5px;
   }
   
-  .cancel-btn {
-    background-color: red; /* Set background color to red */
-    color: white;          /* Set text color to white */
-    border: none;          /* Remove border */
-    padding: 5px 10px;     /* Adjust padding */
-    font-size: 14px;       /* Set font size */
-    cursor: pointer;      /* Change cursor to pointer */
+  /* Popup Form */
+  .signup-popup {
+    position: absolute;
+    top: 100%;
+    left: 0;
+    width: 250px;
+    background-color: white;
+    padding: 15px;
+    border-radius: 8px;
+    box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.1);
+    z-index: 1000;
+    margin-top: 5px;
+  }
+  
+  /* Labels */
+  .signup-label {
+    display: block;
+    margin-bottom: 5px;
+    font-weight: bold;
+  }
+  
+  /* Input Fields */
+  .signup-input {
+    width: 100%;
+    padding: 8px;
+    margin-bottom: 10px;
+    border-radius: 4px;
+    border: 1px solid #ccc;
+  }
+  
+  /* Signup Button */
+  .signup-submit {
+    width: 100%;
+    padding: 10px;
+    background-color: #28a745;
+    color: white;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
   }
   

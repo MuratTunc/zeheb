@@ -26,3 +26,16 @@ mutu@ubuntu-s-1vcpu-2gb-sfo3-01:~$
         exit 1
       fi
 
+
+mutu@mutu:~/projects/zeheb/back-end/build-tools$ curl -I https://mutubackend.com
+HTTP/1.1 200 OK
+Server: nginx/1.26.0 (Ubuntu)
+Date: Sat, 22 Feb 2025 05:44:30 GMT
+Content-Type: text/html
+Content-Length: 644
+Last-Modified: Sat, 22 Feb 2025 05:37:41 GMT
+Connection: keep-alive
+ETag: "67b962a5-284"
+Accept-Ranges: bytes
+
+

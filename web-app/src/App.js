@@ -1,30 +1,16 @@
-import React, { useState } from 'react';
-import Header from './components/Header.js';
-import './App.css';
+import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
+import Header from "./components/Header";
 
 function App() {
-  const [loggedIn, setLoggedIn] = useState(false); // Track login state
-  const [username, setUsername] = useState(''); // Store username
-
-  // Handle login
-  const handleLogin = (user) => {
-    setLoggedIn(true);
-    setUsername(user);
-  };
-
-  // Handle logout
-  const handleLogout = () => {
-    setLoggedIn(false);
-    setUsername('');
-  };
-
   return (
-    <div>
-      <Header loggedIn={loggedIn} username={username} onLogout={handleLogout} onLogin={handleLogin} />
-      <main>
-        {/* Other components or content */}
-      </main>
-    </div>
+    <Router>
+      <Header />
+      <Routes>
+        <Route path="/signin" element={<h2>Signin Page</h2>} />
+        <Route path="/signup" element={<h2>Signup Page</h2>} />
+        <Route path="/" element={<h2>Home Page</h2>} />
+      </Routes>
+    </Router>
   );
 }
 
