@@ -17,10 +17,10 @@ import (
 // Constants for error and success messages
 const (
 	ErrInvalidRequestBody = "Invalid request body"
-	ErrInsertingUser      = "Error inserting user"
+	ErrInsertingUser      = "Error inserting mail"
 	ErrUserNotFound       = "User not found"
 	ErrSendingEmail       = "Failed to send email"
-	ErrUpdatingUser       = "Failed to write new generated auth-code to same username and mailaddress"
+	ErrUpdatingUser       = "Failed to write new generated auth-code to same mailaddress"
 	UserCreatedSuccess    = "User created successfully"
 	ErrDatabase           = "Undifend DTABASE Error"
 	AuthCodeSuccess       = "Authentication code generated and sent successfully!"
@@ -35,7 +35,6 @@ func GenerateAuthCode() string {
 
 // AuthCodeRequest represents the request payload
 type AuthCodeRequest struct {
-	Username    string `json:"username"`
 	MailAddress string `json:"mailAddress"`
 }
 
@@ -103,7 +102,7 @@ func (app *Config) GenerateAndSendAuthCode(w http.ResponseWriter, r *http.Reques
 
 	// Check if user already exists
 	var existingUser User
-	err := app.DB.Where("username = ? AND mail_address = ?", req.Username, req.MailAddress).First(&existingUser).Error
+	err := app.DB.Where("mail_address = ?", req.MailAddress).First(&existingUser).Error
 
 	if err == nil {
 		// User exists -> Update auth_code
@@ -116,7 +115,6 @@ func (app *Config) GenerateAndSendAuthCode(w http.ResponseWriter, r *http.Reques
 	} else if errors.Is(err, gorm.ErrRecordNotFound) {
 		// User does not exist -> Create a new record
 		newUser := User{
-			Username:    req.Username,
 			MailAddress: req.MailAddress,
 			AuthCode:    authCode,
 		}
@@ -158,7 +156,7 @@ func (app *Config) DeleteMailHandler(w http.ResponseWriter, r *http.Request) {
 
 	// Search for the user in the database using the provided username and mail address
 	var user User
-	if err := app.DB.Where("username = ? AND mail_address = ?", req.Username, req.MailAddress).First(&user).Error; err != nil {
+	if err := app.DB.Where("mail_address = ?", req.MailAddress).First(&user).Error; err != nil {
 		if err == gorm.ErrRecordNotFound {
 			http.Error(w, ErrUserNotFound, http.StatusNotFound)
 		} else {

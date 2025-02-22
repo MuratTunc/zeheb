@@ -24,7 +24,6 @@ echo -e "********************************************************************"
 
 
 # Define user details
-USERNAME="testuser"
 MAILADDRESS="murat.tunc8558@gmail.com"
 
 
@@ -78,7 +77,6 @@ send_auth_code_mail() {
 
   # Prepare the request body
   REQUEST_BODY='{
-    "username": "'$USERNAME'",
     "mailAddress": "'$MAILADDRESS'"
   }'
 
@@ -119,7 +117,6 @@ delete_mail() {
 
   # Prepare the request body with both username and mailAddress
   REQUEST_BODY='{
-    "username": "'$USERNAME'",
     "mailAddress": "'$MAILADDRESS'"
   }'
 
