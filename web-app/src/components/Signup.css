@@ -69,6 +69,11 @@
   border: 2px solid red !important;
 }
 
+.error-message {
+  color: red;
+  font-weight: bold;
+}
+
 /* Disable button style */
 .signup-submit:disabled {
   background-color: #ccc;
@@ -76,12 +81,20 @@
 }
 
 
+@keyframes blinkText {
+  0% { opacity: 1; }
+  50% { opacity: 0; }
+  100% { opacity: 1; }
+}
+
 .auth-code-label {
   font-size: 16px;
   font-weight: bold;
   text-align: center;
-  width: 100%; /* Ensures it takes full width */
-  display: block; /* Ensures it behaves like a block element */
+  width: 100%;
+  display: block;
+  margin-bottom: 10px;
+  animation: blinkText 1s infinite; /* Blinking effect */
 }
 
 
