@@ -19,8 +19,8 @@
 .signup-popup {
   position: absolute;
   top: 100%;
-  left: -300px;
-  width: 400px;
+  left: -200px;
+  width: 300px;
   background-color: white;
   padding: 15px;
   border-radius: 8px;
@@ -55,3 +55,21 @@
   border-radius: 5px;
   cursor: pointer;
 }
+
+.signup-submit:disabled {
+  background-color: #ccc;
+  cursor: not-allowed;
+}
+
+/* Red border for empty fields */
+.error-border {
+  border: 2px solid red !important;
+}
+
+/* Disable button style */
+.signup-submit:disabled {
+  background-color: #ccc;
+  cursor: not-allowed;
+}
+
+
