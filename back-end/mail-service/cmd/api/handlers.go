@@ -97,55 +97,55 @@ func (app *Config) GenerateAndSendAuthCode(w http.ResponseWriter, r *http.Reques
 		return
 	}
 
-	// Generate a random 6-digit code
-	authCode := GenerateAuthCode()
-
-	// Check if user already exists
+	// Check if email already exists
 	var existingUser User
 	err := app.DB.Where("mail_address = ?", req.MailAddress).First(&existingUser).Error
 
 	if err == nil {
-		// User exists -> Update auth_code
-		existingUser.AuthCode = authCode
-		if err := app.DB.Save(&existingUser).Error; err != nil {
-			log.Printf("❌ Database error while updating auth_code: %v", err)
-			http.Error(w, ErrUpdatingUser, http.StatusInternalServerError)
-			return
-		}
+		// Email already exists
+		http.Error(w, "Email address already in use.Please enter different email address!", http.StatusConflict)
+		return
 	} else if errors.Is(err, gorm.ErrRecordNotFound) {
-		// User does not exist -> Create a new record
+		// Email doesn't exist, proceed with creating a new user
+		// Generate a random 6-digit code
+		authCode := GenerateAuthCode()
+
+		// Create a new user with the provided email
 		newUser := User{
 			Username:    req.Username,
 			MailAddress: req.MailAddress,
 			AuthCode:    authCode,
 		}
+
+		// Save the new user to the database
 		if err := app.DB.Create(&newUser).Error; err != nil {
 			log.Printf("❌ Database error while inserting new user: %v", err)
 			http.Error(w, ErrInsertingUser, http.StatusInternalServerError)
 			return
 		}
+
+		// Send the authentication code via email
+		if err := SendMail(req.MailAddress, authCode); err != nil {
+			http.Error(w, ErrSendingEmail, http.StatusInternalServerError)
+			return
+		}
+
+		// Log the response before sending it
+		log.Printf("Authentication code sent to %s: %s", req.MailAddress, authCode)
+
+		// Respond with success and return the auth code
+		w.WriteHeader(http.StatusOK)
+		json.NewEncoder(w).Encode(map[string]string{
+			"message":  AuthCodeSuccess,
+			"authCode": authCode, // Returning auth code in the response
+		})
+
 	} else {
-		// Other DB error
+		// Other DB error (like a connection issue)
 		log.Printf("❌ Database error: %v", err)
 		http.Error(w, ErrDatabase, http.StatusInternalServerError)
 		return
 	}
-
-	// Send the authentication code via email
-	if err := SendMail(req.MailAddress, authCode); err != nil {
-		http.Error(w, ErrSendingEmail, http.StatusInternalServerError)
-		return
-	}
-
-	// Log the response before sending it
-	log.Printf("Authentication code sent to %s: %s", req.MailAddress, authCode)
-
-	// Respond with success and return the auth code
-	w.WriteHeader(http.StatusOK)
-	json.NewEncoder(w).Encode(map[string]string{
-		"message":  AuthCodeSuccess,
-		"authCode": authCode, // Returning auth code in the response
-	})
 }
 
 // DeleteMailHandler handles the deletion of a user by username and mail address
