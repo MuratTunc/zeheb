@@ -88,7 +88,6 @@ func SendMail(to string, authCode string) error {
 	return nil
 }
 
-// GenerateAndSendAuthCode handles the request to generate, store, and send an authentication code.
 func (app *Config) GenerateAndSendAuthCode(w http.ResponseWriter, r *http.Request) {
 	var req AuthCodeRequest
 
@@ -137,6 +136,9 @@ func (app *Config) GenerateAndSendAuthCode(w http.ResponseWriter, r *http.Reques
 		http.Error(w, ErrSendingEmail, http.StatusInternalServerError)
 		return
 	}
+
+	// Log the response before sending it
+	log.Printf("Authentication code sent to %s: %s", req.MailAddress, authCode)
 
 	// Respond with success and return the auth code
 	w.WriteHeader(http.StatusOK)

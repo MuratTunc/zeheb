@@ -12,6 +12,7 @@ const Header = () => {
     signup: "Sign up",
     fullName: "Full Name",
     signupButton: "Sign Up",
+    verifyButton: "Verify",  // Add this line for the verify button label
   };
 
   return (

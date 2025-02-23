@@ -12,6 +12,7 @@ const Signup = ({ labels }) => {
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState("");
   const [authCode, setAuthCode] = useState(""); // Store received auth code
+  const [enteredCode, setEnteredCode] = useState(["", "", "", "", "", ""]); // 6 digit code array
   const popupRef = useRef(null);
 
   useEffect(() => {
@@ -45,15 +46,50 @@ const Signup = ({ labels }) => {
   const isSignupEnabled = email.trim().length > 0 && password.trim().length > 0;
 
   const handleSignup = async () => {
-    if (!fullName || !email || !password) return;
+    if (!isSignupEnabled) return;
+  
+    setLoading(true);
+    setMessage("");
   
     try {
-      await sendAuthCode(fullName, email);
-      console.log("Authentication code sent successfully!");
-      // TODO: Open the authentication code entry popup here
+      // Call sendAuthCode and handle the response
+      const result = await sendAuthCode(fullName, email);
+      
+      // Log the result for debugging purposes
+      console.log('Auth code response:', result);
+  
+      // Check if the response contains an auth code
+      if (result && result.authCode) {
+        setAuthCode(result.authCode); // Store received auth code in state
+      } else {
+        // Handle failure case if no authCode is present in response
+        setMessage('Authentication code not received from the server.');
+      }
     } catch (error) {
-      console.error("Error sending authentication code:", error);
+      // Handle error
+      console.error('Error sending authentication code:', error);
+      setMessage('Failed to send authentication code.');
+    } finally {
+      setLoading(false);
     }
+  };
+  
+  
+
+  const handleCodeInputChange = (e, index) => {
+    const newCode = [...enteredCode];
+    newCode[index] = e.target.value.slice(0, 1); // Only allow one digit per field
+    setEnteredCode(newCode);
+    // Move to the next input field after entering a digit
+    if (e.target.value.length === 1 && index < 5) {
+      document.getElementById(`digit-${index + 1}`).focus();
+    }
+  };
+
+  const handleVerify = () => {
+    const code = enteredCode.join(""); // Join the array of digits into a single string
+    console.log("Verification Code Entered: ", code);
+    // Here you can add logic to verify the entered code
   };
 
   return (
@@ -105,9 +141,34 @@ const Signup = ({ labels }) => {
 
           {/* Show authentication code if received */}
           {authCode && (
-            <p className="auth-code-display">
-              ✅ Your Authentication Code: <strong>{authCode}</strong>
-            </p>
+            <>
+              <div className="auth-code-inputs">
+              <label className="auth-code-label">Enter your 6-digit Code</label> { }
+              <label>{labels.enterCode}</label>
+                <div className="auth-code-inputs-container">
+                  {enteredCode.map((digit, index) => (
+                    <input
+                      key={index}
+                      id={`digit-${index}`}
+                      type="text"
+                      maxLength="1"
+                      value={digit}
+                      onChange={(e) => handleCodeInputChange(e, index)}
+                      className="auth-code-input"
+                    />
+                  ))}
+                </div>
+              </div>
+              <button
+                className="verify-button"
+                onClick={handleVerify}
+                disabled={enteredCode.includes("")} // Disable verify button until all fields are filled
+              >
+                {labels.verifyButton}
+              </button>
+
+
+            </>
           )}
         </div>
       )}

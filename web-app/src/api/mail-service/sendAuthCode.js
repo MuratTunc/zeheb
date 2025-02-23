@@ -1,3 +1,4 @@
+// sendAuthCode.js
 const sendAuthCode = async (fullName, email) => {
   const apiUrl = process.env.NODE_ENV === "development"
     ? "https://mutubackend.com/mail-service/send-auth-code-mail"
