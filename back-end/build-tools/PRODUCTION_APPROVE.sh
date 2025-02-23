@@ -71,8 +71,8 @@ make_back_end_services() {
     ssh "$NEW_USER@$SERVER_IP" << EOF
       set -e
       cd "$SERVER_REPO_DIR/back-end/build-tools"
-      sudo make down
-      sudo make up_build
+      echo "🔥 Building backend micro Services..."
+      sudo make -s build
 EOF
     [ $? -eq 0 ] && success "Back-end services restarted successfully!" || error "Failed to restart back-end services."
   fi
@@ -118,6 +118,6 @@ EOF
 success "******** STARTING PRODUCTION APPROVE PROCESS ********"
 clone_repository true
 transfer_envfile true
-make_back_end_services false
+make_back_end_services true
 build_web_app true
 success "All tasks completed successfully!"

@@ -1,9 +1,12 @@
-import React from "react";
+import React, { useState } from "react";
 import "bootstrap/dist/css/bootstrap.min.css";
 import Signin from "./Signin"; // Import Signin component
 import Signup from "./Signup"; // Import Signup component
 
 const Header = () => {
+  const [isAuthenticated, setAuth] = useState(false); // Tracks authentication success
+  const [fullName, setFullName] = useState(""); // Stores user’s full name
+
   const labels = {
     signin: "Sign in",
     email: "Email",
@@ -12,16 +15,22 @@ const Header = () => {
     signup: "Sign up",
     fullName: "Full Name",
     signupButton: "Sign Up",
-    verifyButton: "Verify",  // Add this line for the verify button label
+    verifyButton: "Verify",
   };
 
   return (
     <nav className="navbar navbar-dark bg-secondary p-3">
       <div className="container-fluid">
-        <a className="navbar-brand" href="#">My App</a>
+        <a className="navbar-brand">My App</a>
         <div className="d-flex">
-          <Signin labels={labels} /> {/* Signin Component */}
-          <Signup labels={labels} /> {/* Signup Component */}
+          {isAuthenticated ? (
+            <span className="text-white fw-bold">Welcome, {fullName}!</span>
+          ) : (
+            <>
+              <Signin labels={labels} setAuth={setAuth} setFullName={setFullName} />
+              <Signup labels={labels} setAuth={setAuth} setFullName={setFullName} />
+            </>
+          )}
         </div>
       </div>
     </nav>
