@@ -28,25 +28,28 @@ const Signin = ({ labels, setAuth, setFullName }) => {
 
   const handleSignin = async () => {
     setMessage("Signing in...");
-
+  
     try {
       const result = await loginUser(email, password);
-
-      if (result.success) {
+      console.log(result); // Log the result to debug
+  
+      if (result.loginStatus === "true") {
         setFullName(result.fullName); // Store the user's full name
         setAuth(true); // Mark authentication success
-
+  
         // Save JWT token in localStorage
         localStorage.setItem("authToken", result.token); // Save token to localStorage
-
+  
         setShowPopup(false); // Close popup
       } else {
         setMessage("❌ Invalid email or password.");
       }
     } catch (error) {
+      console.error(error);
       setMessage("❌ Error signing in.");
     }
   };
+  
 
   return (
     <div className="signin-container" ref={popupRef}>

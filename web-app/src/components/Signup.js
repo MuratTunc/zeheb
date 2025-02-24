@@ -3,7 +3,7 @@ import "./Signup.css";
 import sendAuthCode from "../api/mail-service/sendAuthCode";
 import registerNewUser from "../api/user-service/registerNewUser"; // Import registerNewUser.js
 
-const Signup = ({ labels }) => {
+const Signup = ({ labels, setAuth }) => {
   const [showPopup, setShowPopup] = useState(false);
   const [fullName, setFullName] = useState("");
   const [email, setEmail] = useState("");
@@ -41,7 +41,6 @@ const Signup = ({ labels }) => {
       setIsEmailTouched(false);
       setIsPasswordTouched(false);
       setMessage(""); // Clear message on new popup open
-      setMessage(""); // Clear message on new popup open
       setEnteredCode(["", "", "", "", "", ""]); // Reset the entered 6-digit code
     }
     setShowPopup(!showPopup);
@@ -56,7 +55,6 @@ const Signup = ({ labels }) => {
     setMessage("");
   
     try {
-
       setMessage("Sending 6-digit code to your email address...");
       // Call sendAuthCode and handle the response
       const result = await sendAuthCode(fullName, email);
@@ -100,18 +98,13 @@ const Signup = ({ labels }) => {
     if (code === authCode) {
       try {
         const result = await registerNewUser(fullName, email, password); // Call registerNewUser
-        if (result?.token) {
-          // Store JWT token in localStorage
-          localStorage.setItem("jwtToken", result.token);
+        if (result?.success) {
+          setVerifyButtonText("Verified Success"); // Success, show success text
   
-          setVerifyButtonText("Verified Success");
-          setMessage("✅ Registration successful.");
+          // After successful registration, set authentication to true
+          setAuth(true);  // Update authentication state
   
-          // Optionally, store the user's name or email in localStorage
-          localStorage.setItem("userFullName", fullName);
-          
-          // Close the popup after successful registration
-          setTimeout(() => setShowPopup(false), 1000);
+          setTimeout(() => setShowPopup(false), 1000); // Close popup after 1 second
         } else {
           setMessage("❌ Registration failed. Please try again.");
           setVerifyButtonText(labels.verifyButton); // Reset button text
@@ -174,13 +167,11 @@ const Signup = ({ labels }) => {
             {loading ? "Sending..." : labels.signupButton}
           </button>
 
-          
-
           {/* This is where the message is displayed, with conditional styling */}
-            {message && (
-               <p className={message.startsWith("❌") ? "error-message" : "signup-message"}>
-            {message}
-           </p>
+          {message && (
+            <p className={message.startsWith("❌") ? "error-message" : "signup-message"}>
+              {message}
+            </p>
           )}
 
           {/* Show authentication code if received */}
