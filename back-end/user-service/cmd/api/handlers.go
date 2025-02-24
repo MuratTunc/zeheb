@@ -119,18 +119,18 @@ func (app *Config) CreateUserHandler(w http.ResponseWriter, r *http.Request) {
 	})
 }
 
-// LoginUserHandler handles the login request
 func (app *Config) LoginUserHandler(w http.ResponseWriter, r *http.Request) {
 	var user User
 	var storedUser User
 
+	// Parse the incoming request body
 	err := json.NewDecoder(r.Body).Decode(&user)
 	if err != nil {
 		http.Error(w, "Invalid request body", http.StatusBadRequest)
 		return
 	}
 
-	// Find user in DB by MailAddress instead of Username
+	// Find user in DB by MailAddress
 	result := app.DB.Where("mail_address = ?", user.MailAddress).First(&storedUser)
 	if result.Error != nil {
 		http.Error(w, "User not found", http.StatusUnauthorized)
@@ -155,12 +155,13 @@ func (app *Config) LoginUserHandler(w http.ResponseWriter, r *http.Request) {
 	storedUser.LoginStatus = true
 	app.DB.Save(&storedUser)
 
-	// Send token to client
+	// Send response with token, message, login status, and username
 	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(map[string]string{
+	json.NewEncoder(w).Encode(map[string]interface{}{
 		"token":       token,
 		"message":     "Login successful",
 		"loginStatus": "true",
+		"username":    storedUser.Username, // Add username to the response
 	})
 }
 

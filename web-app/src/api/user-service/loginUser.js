@@ -17,7 +17,7 @@ const loginUser = async (mailAddress, password) => {
       throw new Error(errorMessage || "Failed to login");
     }
   
-    return await response.json();
+    return await response.json(); // Returns { token, message, loginStatus, username }
   };
   
   export default loginUser;

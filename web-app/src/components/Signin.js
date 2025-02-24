@@ -1,7 +1,5 @@
 import React, { useState, useEffect, useRef } from "react";
 import "./Signin.css";
-
-// Import the loginUser function
 import loginUser from "../api/user-service/loginUser";
 
 const Signin = ({ labels, setAuth, setFullName }) => {
@@ -31,10 +29,10 @@ const Signin = ({ labels, setAuth, setFullName }) => {
   
     try {
       const result = await loginUser(email, password);
-      console.log(result); // Log the result to debug
+      console.log("Login result:", result); // Debugging log
   
       if (result.loginStatus === "true") {
-        setFullName(result.fullName); // Store the user's full name
+        setFullName(result.username); // Store the user's username
         setAuth(true); // Mark authentication success
   
         // Save JWT token in localStorage
@@ -49,7 +47,6 @@ const Signin = ({ labels, setAuth, setFullName }) => {
       setMessage("❌ Error signing in.");
     }
   };
-  
 
   return (
     <div className="signin-container" ref={popupRef}>
