@@ -15,6 +15,7 @@ type User struct {
 	Username    string    `gorm:"unique;not null"`
 	MailAddress string    `gorm:"unique;not null"`
 	AuthCode    string    `gorm:"not null"`
+	Password    string    `gorm:"not null"` // Added Password field
 	CreatedAt   time.Time `gorm:"autoCreateTime"`
 	UpdatedAt   time.Time `gorm:"autoUpdateTime"`
 }

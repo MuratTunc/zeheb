@@ -50,4 +50,5 @@ func (app *Config) publicRoutes(mux *chi.Mux) {
 	mux.Get("/health", app.HealthCheckHandler)
 	mux.Post("/send-auth-code-mail", app.GenerateAndSendAuthCode)
 	mux.Delete("/delete-mail", app.DeleteMailHandler)
+	mux.Post("/signin", app.SigninHandler)
 }

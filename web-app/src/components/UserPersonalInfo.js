@@ -3,7 +3,6 @@ import React, { useState, useEffect } from "react";
 import "./UserPersonalInfo.css"; // Ensure the correct CSS is imported
 
 const UserPersonalInfo = ({ fullName, setAuth, setFullName }) => {
-  const [selectedOption, setSelectedOption] = useState(""); // State for dropdown selection
   const [isPopupVisible, setPopupVisible] = useState(false); // State for toggling the popup visibility
 
   const togglePopup = () => {

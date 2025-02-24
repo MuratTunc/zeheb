@@ -92,17 +92,26 @@ const Signup = ({ labels }) => {
   };
 
   const handleVerify = async () => {
-    setVerifyButtonText("Verifying..."); // Change button text to "Verifying..."
+    setVerifyButtonText("Verifying...");
   
     const code = enteredCode.join(""); // Join the array of digits into a single string
     console.log("Verification Code Entered: ", code);
-    
+  
     if (code === authCode) {
       try {
         const result = await registerNewUser(fullName, email, password); // Call registerNewUser
-        if (result?.success) {
-          setVerifyButtonText("Verified Success"); // Success, show success text
-          setTimeout(() => setShowPopup(false), 1000); // Close popup after 1 second
+        if (result?.token) {
+          // Store JWT token in localStorage
+          localStorage.setItem("jwtToken", result.token);
+  
+          setVerifyButtonText("Verified Success");
+          setMessage("✅ Registration successful.");
+  
+          // Optionally, store the user's name or email in localStorage
+          localStorage.setItem("userFullName", fullName);
+          
+          // Close the popup after successful registration
+          setTimeout(() => setShowPopup(false), 1000);
         } else {
           setMessage("❌ Registration failed. Please try again.");
           setVerifyButtonText(labels.verifyButton); // Reset button text

@@ -1,6 +1,9 @@
 import React, { useState, useEffect, useRef } from "react";
 import "./Signin.css";
 
+// Import the loginUser function
+import loginUser from "../api/user-service/loginUser";
+
 const Signin = ({ labels, setAuth, setFullName }) => {
   const [showPopup, setShowPopup] = useState(false);
   const [email, setEmail] = useState("");
@@ -27,12 +30,15 @@ const Signin = ({ labels, setAuth, setFullName }) => {
     setMessage("Signing in...");
 
     try {
-      // Simulate API call (Replace with actual API request)
-      const result = await fakeSigninAPI(email, password);
+      const result = await loginUser(email, password);
 
       if (result.success) {
         setFullName(result.fullName); // Store the user's full name
         setAuth(true); // Mark authentication success
+
+        // Save JWT token in localStorage
+        localStorage.setItem("authToken", result.token); // Save token to localStorage
+
         setShowPopup(false); // Close popup
       } else {
         setMessage("❌ Invalid email or password.");
@@ -40,19 +46,6 @@ const Signin = ({ labels, setAuth, setFullName }) => {
     } catch (error) {
       setMessage("❌ Error signing in.");
     }
-  };
-
-  // Fake API for testing (replace with real API call)
-  const fakeSigninAPI = async (email, password) => {
-    return new Promise((resolve) => {
-      setTimeout(() => {
-        if (email === "murat.tunc8558@gmail.com" && password === "12345678") {
-          resolve({ success: true, fullName: "Murat Tunç" });
-        } else {
-          resolve({ success: false });
-        }
-      }, 1000);
-    });
   };
 
   return (

@@ -11,6 +11,7 @@ import (
 	"os"
 	"time"
 
+	"golang.org/x/crypto/bcrypt" // Import bcrypt
 	"gorm.io/gorm"
 )
 
@@ -22,7 +23,7 @@ const (
 	ErrSendingEmail       = "Failed to send email"
 	ErrUpdatingUser       = "Failed to write new generated auth-code to same username and mailaddress"
 	UserCreatedSuccess    = "User created successfully"
-	ErrDatabase           = "Undifend DTABASE Error"
+	ErrDatabase           = "Undefined DATABASE Error"
 	AuthCodeSuccess       = "Authentication code generated and sent successfully!"
 )
 
@@ -37,6 +38,7 @@ func GenerateAuthCode() string {
 type AuthCodeRequest struct {
 	Username    string `json:"username"`
 	MailAddress string `json:"mailAddress"`
+	Password    string `json:"password"` // Added Password field
 }
 
 // HealthCheckHandler checks if the database is available
@@ -88,6 +90,24 @@ func SendMail(to string, authCode string) error {
 	return nil
 }
 
+// HashPassword hashes the user's password using bcrypt
+func HashPassword(password string) (string, error) {
+	// Generate hash
+	hash, err := bcrypt.GenerateFromPassword([]byte(password), bcrypt.DefaultCost)
+	if err != nil {
+		return "", err
+	}
+	return string(hash), nil
+}
+
+// CheckPasswordHash checks if the entered password matches the stored hash
+func CheckPasswordHash(password, hash string) bool {
+	// Compare the entered password with the hash from the database
+	err := bcrypt.CompareHashAndPassword([]byte(hash), []byte(password))
+	return err == nil
+}
+
+// GenerateAndSendAuthCode generates and sends an authentication code to the user's email
 func (app *Config) GenerateAndSendAuthCode(w http.ResponseWriter, r *http.Request) {
 	var req AuthCodeRequest
 
@@ -103,18 +123,27 @@ func (app *Config) GenerateAndSendAuthCode(w http.ResponseWriter, r *http.Reques
 
 	if err == nil {
 		// Email already exists
-		http.Error(w, "Email address already in use.Please enter different email address!", http.StatusConflict)
+		http.Error(w, "Email address already in use. Please enter a different email address!", http.StatusConflict)
 		return
 	} else if errors.Is(err, gorm.ErrRecordNotFound) {
 		// Email doesn't exist, proceed with creating a new user
 		// Generate a random 6-digit code
 		authCode := GenerateAuthCode()
 
-		// Create a new user with the provided email
+		// Hash the password before saving it
+		hashedPassword, err := HashPassword(req.Password)
+		if err != nil {
+			log.Printf("❌ Error hashing password: %v", err)
+			http.Error(w, "Error hashing password", http.StatusInternalServerError)
+			return
+		}
+
+		// Create a new user with the provided email and hashed password
 		newUser := User{
 			Username:    req.Username,
 			MailAddress: req.MailAddress,
 			AuthCode:    authCode,
+			Password:    hashedPassword, // Store the hashed password
 		}
 
 		// Save the new user to the database
@@ -146,6 +175,43 @@ func (app *Config) GenerateAndSendAuthCode(w http.ResponseWriter, r *http.Reques
 		http.Error(w, ErrDatabase, http.StatusInternalServerError)
 		return
 	}
+}
+
+// SigninHandler handles user login
+func (app *Config) SigninHandler(w http.ResponseWriter, r *http.Request) {
+	var req AuthCodeRequest // Assuming you will send email and password for signin
+
+	// Parse the request body
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		http.Error(w, ErrInvalidRequestBody, http.StatusBadRequest)
+		return
+	}
+
+	// Find user by email address
+	var user User
+	if err := app.DB.Where("mail_address = ?", req.MailAddress).First(&user).Error; err != nil {
+		if err == gorm.ErrRecordNotFound {
+			http.Error(w, ErrUserNotFound, http.StatusNotFound)
+			return
+		}
+		http.Error(w, ErrDatabase, http.StatusInternalServerError)
+		return
+	}
+
+	// Check if the password matches the hashed version in the database
+	// Use bcrypt's CompareHashAndPassword to verify
+	err := bcrypt.CompareHashAndPassword([]byte(user.Password), []byte(req.Password))
+	if err != nil {
+		http.Error(w, "Invalid password", http.StatusUnauthorized)
+		return
+	}
+
+	// Successful login, return user details or token (if needed)
+	w.WriteHeader(http.StatusOK)
+	json.NewEncoder(w).Encode(map[string]string{
+		"message": "Login successful",
+		"user":    user.Username,
+	})
 }
 
 // DeleteMailHandler handles the deletion of a user by username and mail address
