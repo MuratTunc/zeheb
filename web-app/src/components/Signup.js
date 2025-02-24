@@ -56,30 +56,30 @@ const Signup = ({ labels }) => {
     setMessage("");
   
     try {
-      setMessage("Sending 6 digit code to your mail address...");
+
+      setMessage("Sending 6-digit code to your email address...");
       // Call sendAuthCode and handle the response
       const result = await sendAuthCode(fullName, email);
-      
-      
-      // Log the result for debugging purposes
-      console.log('Auth code response:', result);
+      // Log the result for debugging
+      console.log("Auth code response:", result);
   
       // Check if the response contains an auth code
-      if (result && result.authCode) {
-        setMessage("6 digit verification code has been sent to your email address.");
+      if (result?.authCode) {
+        setMessage("6-digit verification code has been sent to your email address.");
         setAuthCode(result.authCode); // Store received auth code in state
       } else {
-        // Handle failure case if no authCode is present in response
-        setMessage('Authentication code not received from the server.');
+        setMessage("Authentication code not received from the server.");
       }
     } catch (error) {
-      // Handle error
-      console.error('Error sending authentication code:', error);
-      setMessage('Failed to send authentication code.');
+      console.error("Error sending authentication code:", error);
+  
+      // Check if the error has a message from the backend
+      setMessage(`❌ ${error.message || "Failed to send authentication code."}`);
     } finally {
       setLoading(false);
     }
   };
+  
 
   const handleCodeInputChange = (e, index) => {
     const newCode = [...enteredCode];
@@ -167,10 +167,10 @@ const Signup = ({ labels }) => {
 
           
 
-              {/* This is where the message is displayed, with conditional styling */}
-          {message && (
-            <p className={message === "❌ Incorrect code. Please try again." ? "error-message" : "signup-message"}>
-             {message}
+          {/* This is where the message is displayed, with conditional styling */}
+            {message && (
+               <p className={message.startsWith("❌") ? "error-message" : "signup-message"}>
+            {message}
            </p>
           )}
 

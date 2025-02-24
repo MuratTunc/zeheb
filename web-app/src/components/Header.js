@@ -1,7 +1,9 @@
+// Header.js
 import React, { useState } from "react";
 import "bootstrap/dist/css/bootstrap.min.css";
 import Signin from "./Signin"; // Import Signin component
 import Signup from "./Signup"; // Import Signup component
+import UserPersonalInfo from "./UserPersonalInfo"; // Import UserPersonalInfo component
 
 const Header = () => {
   const [isAuthenticated, setAuth] = useState(false); // Tracks authentication success
@@ -24,7 +26,7 @@ const Header = () => {
         <a className="navbar-brand">My App</a>
         <div className="d-flex">
           {isAuthenticated ? (
-            <span className="text-white fw-bold">Welcome, {fullName}!</span>
+            <UserPersonalInfo fullName={fullName} setAuth={setAuth} setFullName={setFullName} />
           ) : (
             <>
               <Signin labels={labels} setAuth={setAuth} setFullName={setFullName} />
