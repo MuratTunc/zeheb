@@ -140,7 +140,7 @@ login_user() {
   
   # Prepare the request body
   JSON_BODY='{
-    "username": "'$USERNAME'",
+    "mailAddress": "'$MAILADDRESS'",  # Use mailAddress instead of username
     "password": "'$PASSWORD'"
   }'
 
@@ -174,6 +174,7 @@ login_user() {
   echo "✅ Login successful. JWT token received."
   echo
 }
+
 
 
 # Function to get user details
