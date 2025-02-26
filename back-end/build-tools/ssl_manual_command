@@ -42,3 +42,21 @@ Accept-Ranges: bytes
 murat.tunc8558@gmail.com
 
 
+v=spf1 include:spf.efwd.registrar-servers.com ~all
+
+
+1-Run emulator
+
+
+2-
+
+
+3-npx react-native run-android
+-->
+BUILD SUCCESSFUL in 7s
+58 actionable tasks: 9 executed, 49 up-to-date
+info Connecting to the development server...
+8081
+info Starting the app on "emulator-5554"...
+Starting: Intent { act=android.intent.action.MAIN cat=[android.intent.category.LAUNCHER] cmp=com.mobileapp/.MainActivity }
+

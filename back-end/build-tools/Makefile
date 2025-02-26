@@ -1,13 +1,12 @@
 # Environment file and variables
 ENV_FILE := .env
 WAIT_TIME ?= 5  # Default wait time is 5 seconds, can be overridden
-ENVIRONMENT ?= development  # Default to development
+ENVIRONMENT ?= production  # Default to development
 
 build: stop_all_containers clean_volumes check_postgres build_user_service build_mail_service
 	@echo "Loading environment variables from .env..."
 	@export $(shell sed 's/#.*//g' .env | xargs) && \
 	echo "USER_SERVICE_PORT is $$USER_SERVICE_PORT" && \
-	echo "USER_SERVICE_NAME is $$USER_SERVICE_NAME" && \
 	echo "MAIL_SERVICE_PORT is $$MAIL_SERVICE_PORT" && \
 	echo "🚀 Building (when required) and starting docker images with environment variables..." && \
 	docker-compose up --build -d && \

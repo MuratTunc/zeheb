@@ -27,3 +27,9 @@
 .nav-links li a:hover {
   text-decoration: underline;
 }
+
+nav .navbar-brand {
+  font-weight: bold !important;
+  font-style: italic !important;
+  color: blue !important; 
+}
