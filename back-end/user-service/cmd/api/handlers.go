@@ -126,28 +126,28 @@ func (app *Config) LoginUserHandler(w http.ResponseWriter, r *http.Request) {
 	// Parse the incoming request body
 	err := json.NewDecoder(r.Body).Decode(&user)
 	if err != nil {
-		http.Error(w, "Invalid request body", http.StatusBadRequest)
+		http.Error(w, "Invalid request body from UI", http.StatusBadRequest)
 		return
 	}
 
 	// Find user in DB by MailAddress
 	result := app.DB.Where("mail_address = ?", user.MailAddress).First(&storedUser)
 	if result.Error != nil {
-		http.Error(w, "User not found", http.StatusUnauthorized)
+		http.Error(w, "User-mail address not found! Please check your mail address ro Signup", http.StatusUnauthorized)
 		return
 	}
 
 	// Compare passwords (Hash the input password and compare with stored hashed password)
 	err = bcrypt.CompareHashAndPassword([]byte(storedUser.Password), []byte(user.Password))
 	if err != nil {
-		http.Error(w, "Invalid credentials", http.StatusUnauthorized)
+		http.Error(w, "The password entered is incorrect. Invalid credentials", http.StatusUnauthorized)
 		return
 	}
 
 	// Generate JWT token
 	token, err := GenerateJWT(storedUser.MailAddress, storedUser.Role)
 	if err != nil {
-		http.Error(w, "Failed to generate token", http.StatusInternalServerError)
+		http.Error(w, "Failed to generate JWT token", http.StatusInternalServerError)
 		return
 	}
 

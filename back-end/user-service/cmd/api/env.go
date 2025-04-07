@@ -22,6 +22,7 @@ const DBPort = "5432"
 
 // PrintEnvVariables prints all environment variables for debugging
 func PrintEnvVariables() {
+
 	fmt.Println("🔧 Loaded Environment Variables - USER_SERVICE")
 	fmt.Printf("DBHost: %s\n", DBHost)
 	fmt.Printf("DBUser: %s\n", DBUser)
@@ -39,7 +40,7 @@ func PrintEnvVariables() {
 		missingEnvVars = true
 	}
 	if ServicePort == "" || ServiceName == "" {
-		fmt.Println("❌ Error: Missing required service environment variables")
+		fmt.Println("❌ Error: Missing required ServicePort or ServiceName environment variables")
 		missingEnvVars = true
 	}
 
