@@ -35,7 +35,21 @@ services:
     env_file:
       - .env
     networks:
-      - app-network    
+      - app-network
+
+  # Prometheus Monitoring
+  prometheus:
+    image: ${PROMETHEUS_IMAGE_NAME}
+    container_name: ${PROMETHEUS_CONTAINER_NAME}
+    restart: always
+    volumes:
+      - ./prometheus.yml:/etc/prometheus/prometheus.yml
+    ports:
+      - "${PROMETHEUS_PORT}:${PROMETHEUS_PORT}"
+    env_file:
+      - .env    
+    networks:
+      - app-network
 
   # User Database
   user-db:

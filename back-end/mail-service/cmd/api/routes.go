@@ -8,6 +8,7 @@ import (
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
 	"github.com/go-chi/cors"
+	"github.com/prometheus/client_golang/prometheus/promhttp"
 )
 
 // Define routes for the application
@@ -15,7 +16,7 @@ func (app *Config) routes() http.Handler {
 
 	mux := chi.NewRouter()
 
-	app.setupMiddleware(mux) // Attach middleware
+	app.SetupMiddleware(mux)
 
 	app.publicRoutes(mux) // Public routes (no authentication required)
 
@@ -51,4 +52,5 @@ func (app *Config) publicRoutes(mux *chi.Mux) {
 	mux.Post("/send-auth-code-mail", app.GenerateAndSendAuthCode)
 	mux.Delete("/delete-mail", app.DeleteMailHandler)
 	mux.Post("/signin", app.SigninHandler)
+	mux.Get("/metrics", promhttp.Handler().ServeHTTP)
 }
